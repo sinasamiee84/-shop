@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}ثبت‌نام{% endblock %}
+{% block eyebrow %}شروع یک همراهی تازه{% endblock %}
+{% block heading %}ساخت حساب کاربری{% endblock %}
+{% block subtitle %}
+    شماره تماس و رمز دلخواهت را وارد کن؛ در مرحلهٔ بعد شماره‌ات را تأیید می‌کنی.
+{% endblock %}
+
+{% block form_content %}
+<form method="post" class="auth-form" action="{% url 'account:signup' %}">
+    {% csrf_token %}
+    {% include "account/_form_fields.html" %}
+
+    <button type="submit" class="primary-action">ثبت‌نام و دریافت کد</button>
+</form>
+{% endblock %}
+
+{% block after_form %}
+    <div class="form-bottom">
+        قبلاً ثبت‌نام کرده‌ای؟
+        <a href="{% url 'account:login' %}">وارد شو</a>
+    </div>
+{% endblock %}

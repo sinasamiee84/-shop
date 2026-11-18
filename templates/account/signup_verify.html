@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}تأیید شماره تماس{% endblock %}
+{% block eyebrow %}یک قدم تا تکمیل ثبت‌نام{% endblock %}
+{% block heading %}تأیید شماره تماس{% endblock %}
+{% block subtitle %}
+    کد پنج‌رقمی ارسال‌شده به شمارهٔ خود را وارد کنید. اعتبار هر کد ۲ دقیقه است.
+{% endblock %}
+
+{% block form_content %}
+<form method="post" class="auth-form" action="{% url 'account:signup_verify' %}">
+    {% csrf_token %}
+    {% include "account/_form_fields.html" %}
+
+    <button type="submit" class="primary-action">تأیید و تکمیل ثبت‌نام</button>
+</form>
+
+<form method="post" action="{% url 'account:resend_signup_otp' %}" id="resend-form">
+    {% csrf_token %}
+    <button type="submit" id="resend-btn" class="secondary-action">ارسال دوبارهٔ کد</button>
+</form>
+{% endblock %}
+
+{% block after_form %}
+    <div class="form-bottom">
+        شماره را اشتباه وارد کرده‌اید؟
+        <a href="{% url 'account:signup' %}">بازگشت و ویرایش شماره</a>
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const resendBtn = document.getElementById("resend-btn");
+    if (!resendBtn) return;
+
+    // زمان انتظار به ثانیه (مطابق با OTP_RESEND_COOLDOWN_SECONDS در سرویس)
+    let timeLeft = 120;
+    const originalText = resendBtn.textContent;
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            resendBtn.disabled = false;
+            resendBtn.textContent = originalText;
+            resendBtn.style.opacity = "1";
+            resendBtn.style.cursor = "pointer";
+        } else {
+            resendBtn.disabled = true;
+            resendBtn.style.opacity = "0.6";
+            resendBtn.style.cursor = "not-allowed";
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const timeString = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            resendBtn.textContent = `ارسال مجدد کد تا ${timeString}`;
+            timeLeft--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    updateTimer();
+});
+</script>
+{% endblock %}

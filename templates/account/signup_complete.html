@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}تکمیل ثبت‌نام{% endblock %}
+{% block eyebrow %}آخرین مرحله{% endblock %}
+{% block heading %}تکمیل اطلاعات حساب{% endblock %}
+{% block subtitle %}
+    نام و رمز عبور دلخواهت را وارد کن.
+{% endblock %}
+
+{% block form_content %}
+<form method="post" class="auth-form" action="{% url 'account:signup_complete' %}">
+    {% csrf_token %}
+    {% include "account/_form_fields.html" %}
+
+    <button type="submit" class="primary-action">ساخت حساب</button>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}ورود{% endblock %}
+{% block eyebrow %}خوش برگشتی{% endblock %}
+{% block heading %}ورود به حساب کاربری{% endblock %}
+{% block subtitle %}
+    شماره تماس و رمز عبورت را وارد کن.
+{% endblock %}
+
+{% block form_content %}
+<form method="post" class="auth-form" action="{% url 'account:login' %}">
+    {% csrf_token %}
+
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    {% include "account/_form_fields.html" %}
+
+    <button type="submit" class="primary-action">ورود به حساب</button>
+</form>
+{% endblock %}
+
+{% block after_form %}
+    <a class="inline-link" href="{% url 'account:password_reset_request' %}">
+        رمز عبورت را فراموش کرده‌ای؟
+    </a>
+
+    <div class="form-bottom">
+        حساب کاربری نداری؟
+        <a href="{% url 'account:signup' %}">ثبت‌نام کن</a>
+    </div>
+{% endblock %}

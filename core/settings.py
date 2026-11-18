@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 import environ
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,6 +30,14 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     default=["127.0.0.1", "localhost"],
@@ -50,6 +59,8 @@ INSTALLED_APPS = [
 
     "crispy_forms",
     "crispy_bootstrap5",
+
+    'apps.account',
 ]
 
 MIDDLEWARE = [
@@ -63,13 +74,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+#User
+
+AUTH_USER_MODEL = "account.CustomUser"
+LOGIN_URL = "account:login"
+LOGIN_REDIRECT_URL = "/"
+
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -126,30 +142,45 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 #Bootstrap :
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 #Un-fold
 
 UNFOLD = {
-    "SITE_TITLE": "فروشگاه تجهیزات توانبخشی",
-    "SITE_HEADER": "مدیریت فروشگاه",
+    "SITE_TITLE": "فروشگاه تجهیزات پزشکی طب شاپ",
+    "SITE_HEADER": "مدیریت طب شاپ",
     "SITE_URL": "/",
     "SIDEBAR": {
-        "show_search": True,
-        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "کاربران و احراز هویت",
+                "items": [
+                    {
+                        "title": "کاربران",
+                        "icon": "person",
+                        "link": "/admin/account/customuser/",
+                    },
+                    {
+                        "title": "کدهای OTP",
+                        "icon": "vpn_key",
+                        "link": "/admin/account/otpcode/",
+                    },
+                ],
+            },
+        ],
     },
 }
 
@@ -157,7 +188,7 @@ UNFOLD = {
 #zarinpal
 
 ZARINPAL_SANDBOX = env.bool("ZARINPAL_SANDBOX", default=True)
-ZARINPAL_MERCHANT_ID = env("ZARINPAL_MERCHANT_ID")
+ZARINPAL_MERCHANT_ID = env("ZARINPAL_MERCHANT_ID", default="")
 
 if ZARINPAL_SANDBOX:
     ZARINPAL_REQUEST_URL = "https://sandbox.zarinpal.com/pg/v4/payment/request.json"
@@ -177,10 +208,4 @@ KAVENEGAR_OTP_TEMPLATE = env("KAVENEGAR_OTP_TEMPLATE", default="")
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
-
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
