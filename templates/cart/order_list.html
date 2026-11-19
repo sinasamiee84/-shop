@@ -4,25 +4,96 @@
 {% block title %}سفارش‌های من{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h1 class="mb-4">سفارش‌های من</h1>
+<div class="container py-5" dir="rtl">
+    <h2 class="mb-4">تاریخچه سفارش‌ها</h2>
+
     {% if not orders %}
-        <div class="alert alert-info">شما تاکنون سفارشی ثبت نکرده‌اید.</div>
+        <div class="alert alert-info py-4 text-center">
+            شما تاکنون سفارشی ثبت نکرده‌اید.
+        </div>
     {% else %}
-        <div class="list-group">
+        <div class="d-grid gap-3">
             {% for order in orders %}
-                <a href="{% url 'cart:order_detail' order.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="fw-bold">سفارش شماره #{{ order.pk }}</div>
-                        <small class="text-muted">تاریخ ثبت: {{ order.created_at|date:"Y/m/d H:i" }}</small>
+                <div class="card shadow-sm border-0 p-3 order-card">
+                    <a
+                        href="{% url 'cart:order_detail' order.pk %}"
+                        class="order-card-link"
+                        aria-label="مشاهده جزئیات سفارش شماره {{ order.pk }}"
+                    ></a>
+
+                    <div class="d-flex flex-row justify-content-between align-items-center gap-3">
+                        <div>
+                            <span class="fw-bold text-dark">
+                                سفارش شماره #{{ order.pk }}
+                            </span>
+                            <div>
+                                <small class="text-muted">
+                                    {{ order.created_at|date:"Y/m/d H:i" }}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            {% if order.status == "pending" %}
+                                <span class="badge bg-warning text-dark">
+                                    {{ order.get_status_display }}
+                                </span>
+                            {% elif order.status == "paid" %}
+                                <span class="badge bg-success">
+                                    {{ order.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    {{ order.get_status_display }}
+                                </span>
+                            {% endif %}
+
+                            <div class="fw-bold fs-5 mt-2">
+                                {{ order.final_price|intcomma }}
+                                <small class="fw-normal">تومان</small>
+                            </div>
+
+                            {% if order.status == "pending" %}
+                                <form
+                                    method="post"
+                                    action="{% url 'cart:order_cancel' order.pk %}"
+                                    class="mt-2 position-relative"
+                                    onsubmit="return confirm('آیا از لغو این سفارش اطمینان دارید؟');"
+                                >
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        لغو سفارش
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div>
-                        <span class="badge bg-secondary me-2">{{ order.get_status_display }}</span>
-                        <span class="fw-bold">{{ order.final_price|intcomma }} تومان</span>
-                    </div>
-                </a>
+                </div>
             {% endfor %}
         </div>
     {% endif %}
 </div>
+
+<style>
+    .order-card {
+        position: relative;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .order-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+        transform: translateY(-1px);
+    }
+
+    .order-card-link {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
+
+    .order-card form,
+    .order-card button {
+        z-index: 2;
+    }
+</style>
 {% endblock %}

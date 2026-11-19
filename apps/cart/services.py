@@ -69,28 +69,34 @@ def get_unit_price(product, variant=None):
 
 
 def is_discount_available(discount, now=None):
-    now = now or timezone.now()
-    if not discount.is_active:
+    if not discount or not discount.is_active:
         return False
-    if discount.active_from and discount.active_from > now:
+
+    if now is None:
+        now = timezone.now()
+
+    # تطبیق با نام فیلدهای واقعی مدل Discount
+    if discount.active_from and now < discount.active_from:
         return False
-    if discount.active_to and discount.active_to < now:
+
+    if discount.active_to and now > discount.active_to:
         return False
+
     if discount.usage_limit is not None and discount.used_count >= discount.usage_limit:
         return False
+
     return True
 
 
-def calculate_discount_amount(discount, amount):
-    amount = max(Decimal(str(amount)), ZERO)
-    value = max(Decimal(str(discount.value)), ZERO)
-
-    if str(discount.discount_type).lower() in {"percent", "percentage"}:
-        discount_amount = amount * value / Decimal("100")
-    else:
-        discount_amount = value
-    return min(discount_amount, amount)
-
+def calculate_discount_amount(discount, total_amount):
+    if discount.discount_type == Discount.DiscountType.PERCENTAGE:
+        amount = (total_amount * discount.value) / Decimal('100')
+        if discount.max_discount_amount and amount > discount.max_discount_amount:
+            amount = discount.max_discount_amount
+        return amount
+    elif discount.discount_type == Discount.DiscountType.FIXED:
+        return min(discount.value, total_amount)
+    return Decimal('0')
 
 def get_product_discount(product, unit_price, now=None):
     now = now or timezone.now()

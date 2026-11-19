@@ -199,35 +199,52 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-  order = models.ForeignKey(
-      Order,
-      on_delete=models.CASCADE,
-      related_name='items',
-      verbose_name='سفارش',
-  )
-  product_title = models.CharField(
-      max_length=255, verbose_name='عنوان محصول در زمان خرید'
-  )
-  variant_title = models.CharField(
-      max_length=255, blank=True, null=True, verbose_name='مشخصه متغیر'
-  )
-  unit_price = models.DecimalField(
-      max_digits=12, decimal_places=0, verbose_name='قیمت واحد'
-  )
-  quantity = models.PositiveIntegerField(verbose_name='تعداد')
-  total_price = models.DecimalField(
-      max_digits=12, decimal_places=0, verbose_name='قیمت کل'
-  )
-  discount_amount = models.DecimalField(
-      max_digits=12,
-      decimal_places=0,
-      default=0,
-      verbose_name='تخفیف اعمال شده روی این آیتم',
-  )
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items",
+        verbose_name="سفارش",
+    )
+    # اضافه کردن ارتباط با واریانت (null=True برای جلوگیری از خطای داده‌های قبلی)
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="order_items",
+        verbose_name="واریانت محصول",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="order_items",
+        verbose_name="محصول",
+    )
+    product_title = models.CharField(
+        max_length=255, verbose_name="عنوان محصول در زمان خرید"
+    )
+    variant_title = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="مشخصه متغیر"
+    )
+    unit_price = models.DecimalField(
+        max_digits=12, decimal_places=0, verbose_name="قیمت واحد"
+    )
+    quantity = models.PositiveIntegerField(verbose_name="تعداد")
+    total_price = models.DecimalField(
+        max_digits=12, decimal_places=0, verbose_name="قیمت کل"
+    )
+    discount_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        default=0,
+        verbose_name="تخفیف اعمال شده روی این آیتم",
+    )
 
-  class Meta:
-    verbose_name = 'آیتم سفارش'
-    verbose_name_plural = 'آیتم‌های سفارش'
+    class Meta:
+        verbose_name = "آیتم سفارش"
+        verbose_name_plural = "آیتم‌های سفارش"
 
-  def __str__(self):
-    return f'{self.quantity}x {self.product_title} در سفارش #{self.order.id}'
+    def __str__(self):
+        return f"{self.quantity}x {self.product_title} در سفارش #{self.order.id}"

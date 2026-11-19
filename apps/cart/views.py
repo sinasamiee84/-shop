@@ -6,7 +6,8 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 from django.db.models import F
 from .forms import CheckoutForm
-from .models import CartItem, Order, OrderItem, Product, ProductVariant, Discount,Cart
+
+from .models import CartItem, Order, OrderItem, Product, ProductVariant, Discount,Cart,ProductVariant
 from .services import (
     build_cart_summary,
     get_cart_for_request,
@@ -15,7 +16,7 @@ from .services import (
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
 from django.http import JsonResponse  # حتماً این را در بالا ایمپورت کنید
-
+from .services import is_discount_available
 
 def product_url_with_variant(product, variant_id=None):
     """
@@ -285,19 +286,20 @@ class RemoveCartItemView(View):
 
 class ApplyCartDiscountView(View):
     def post(self, request):
-        code = request.POST.get("discount_code", "").strip()
+        code = request.POST.get('discount_code', '').strip()
         if not code:
-            messages.error(request, "لطفاً کد تخفیف را وارد کنید.")
-            return redirect("cart:cart")
+            messages.error(request, 'لطفاً کد تخفیف را وارد کنید.')
+            return redirect('cart:cart')
 
-        try:
-            discount = Discount.objects.get(code__iexact=code, apply_type="cart", is_active=True)
-            request.session["cart_discount_id"] = discount.pk
-            messages.success(request, "کد تخفیف اعمال شد.")
-        except Discount.DoesNotExist:
-            messages.error(request, "کد تخفیف معتبر نیست یا منقضی شده است.")
+        discount = Discount.objects.filter(code=code, apply_type='cart').first()
+        if not discount or not is_discount_available(discount):
+            messages.error(request, 'کد تخفیف نامعتبر، منقضی شده یا به سقف مصرف رسیده است.')
+            return redirect('cart:cart')
 
-        return redirect("cart:cart")
+        # ذخیره در سشن
+        request.session['cart_discount_id'] = discount.id
+        messages.success(request, 'کد تخفیف با موفقیت اعمال شد.')
+        return redirect('cart:cart')
 
 
 class CheckoutView(LoginRequiredMixin, View):
@@ -314,7 +316,11 @@ class CheckoutView(LoginRequiredMixin, View):
             return redirect("cart:cart")
 
         form = CheckoutForm()
-        return render(request, self.template_name, {"form": form, "cart": cart, **summary})
+        return render(request, self.template_name, {
+            "form": form,
+            "cart": cart,
+            **summary,
+        })
 
     def post(self, request):
         check_and_expire_abandoned_carts()
@@ -327,7 +333,11 @@ class CheckoutView(LoginRequiredMixin, View):
 
         form = CheckoutForm(request.POST)
         if not form.is_valid():
-            return render(request, self.template_name, {"form": form, "cart": cart, **summary})
+            return render(request, self.template_name, {
+                "form": form,
+                "cart": cart,
+                **summary,
+            })
 
         with transaction.atomic():
             cart_items = list(
@@ -342,7 +352,6 @@ class CheckoutView(LoginRequiredMixin, View):
 
             summary = build_cart_summary(request, cart)
 
-            # ثبت سفارش نهایی (چون موجودی قبلاً در زمان افزودن به سبد کم شده بود، نیاز به کسر مجدد نیست)
             order = Order.objects.create(
                 user=request.user,
                 full_name=form.cleaned_data["full_name"],
@@ -353,38 +362,40 @@ class CheckoutView(LoginRequiredMixin, View):
                 product_discount_amount=summary["product_discount_total"],
                 cart_discount_amount=summary["cart_discount_amount"],
                 final_price=summary["final_price"],
-                status="pending",  # یا پرداخت شده
+                status="pending",
             )
 
             for line in summary["lines"]:
                 OrderItem.objects.create(
                     order=order,
-                    product=line["product"],
                     variant=line["variant"],
+                    product=line["product"],
                     product_title=str(line["product"]),
-                    variant_title=str(line["variant"]) if line["variant"] else "",
+                    variant_title=(
+                        str(line["variant"]) if line["variant"] else ""
+                    ),
                     unit_price=line["unit_price"],
                     quantity=line["quantity"],
                     total_price=line["line_total"],
                     discount_amount=line["product_discount_amount"],
                 )
 
-            # آپدیت تعداد استفاده از تخفیف‌ها
             if summary["used_product_discount_ids"]:
-                Discount.objects.filter(pk__in=summary["used_product_discount_ids"]).update(
-                    used_count=F("used_count") + 1
-                )
+                Discount.objects.filter(
+                    pk__in=summary["used_product_discount_ids"]
+                ).update(used_count=F("used_count") + 1)
+
             if summary["cart_discount"]:
-                Discount.objects.filter(pk=summary["cart_discount"].pk).update(
-                    used_count=F("used_count") + 1
-                )
+                Discount.objects.filter(
+                    pk=summary["cart_discount"].pk
+                ).update(used_count=F("used_count") + 1)
                 request.session.pop("cart_discount_id", None)
 
-            # پاکسازی آیتم‌های سبد خرید (بدون بازگشت به انبار، چون سفارش ثبت شد)
+            # موجودی قبلاً هنگام افزودن به سبد کم شده؛ اینجا دوباره کم نمی‌شود.
             CartItem.objects.filter(cart=cart).delete()
 
         messages.success(request, "سفارش شما با موفقیت ثبت شد.")
-        return redirect("cart:order_detail", pk=order.pk)
+        return redirect("payment:pay", order_id=order.pk)
 
 
 class OrderListView(LoginRequiredMixin, ListView):
@@ -405,3 +416,25 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).prefetch_related("items")
+
+
+class CancelOrderView(LoginRequiredMixin, View):
+    def post(self, request, pk):  # pk همان order_id است که از URL می‌آید
+        order = get_object_or_404(Order, pk=pk, user=request.user, status="pending")
+
+        with transaction.atomic():
+            for item in order.items.select_related("variant", "product"):
+                if item.variant:
+                    item.variant.quantity += item.quantity
+                    item.variant.save()
+                elif item.product:
+                    item.product.quantity += item.quantity
+                    item.product.save()
+
+            order.status = "cancelled"
+            order.save()
+
+        messages.success(request, "سفارش با موفقیت لغو شد و موجودی به انبار بازگشت.")
+        return redirect("cart:order_list")
+
+
