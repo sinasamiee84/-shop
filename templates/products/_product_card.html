@@ -1,0 +1,35 @@
+{% load humanize %}
+
+<article class="shop-card">
+    <a class="shop-card-media"
+       href="{% url 'products:detail' product.slug %}"
+       aria-label="مشاهده {{ product.title }}">
+        {% with image=product.images.all|first %}
+            {% if image %}
+                <img src="{{ image.image.url }}"
+                     alt="{{ product.title }}"
+                     loading="lazy">
+            {% else %}
+                <span class="text-muted">تصویری ثبت نشده است</span>
+            {% endif %}
+        {% endwith %}
+    </a>
+
+    <div class="shop-card-body">
+        <h3 class="shop-card-title">
+            <a href="{% url 'products:detail' product.slug %}">
+                {{ product.title }}
+            </a>
+        </h3>
+
+        <div class="mt-auto">
+            <div class="shop-price mb-3">
+                <bdi>{{ product.price|intcomma }}</bdi> تومان
+            </div>
+            <a class="shop-btn w-100"
+               href="{% url 'products:detail' product.slug %}">
+                مشاهده محصول <span aria-hidden="true">←</span>
+            </a>
+        </div>
+    </div>
+</article>

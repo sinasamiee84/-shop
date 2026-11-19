@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% load humanize l10n %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .shop-detail-media .carousel {
+        width: 100%;
+    }
+
+    .shop-detail-media .carousel-item img {
+        display: block;
+        width: 100%;
+        height: 340px;
+        object-fit: contain;
+    }
+
+    .shop-detail-media .carousel-control-prev,
+    .shop-detail-media .carousel-control-next {
+        width: 12%;
+    }
+
+    .shop-detail-media .carousel-control-prev-icon,
+    .shop-detail-media .carousel-control-next-icon {
+        filter: invert(1);
+    }
+
+    .shop-detail-media .carousel-indicators button {
+        background-color: #157454;
+    }
+
+    .shop-detail-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .shop-detail-options .form-select:focus {
+        border-color: #157454;
+        box-shadow: 0 0 0 .2rem rgba(21, 116, 84, .15);
+    }
+
+    @media (max-width: 576px) {
+        .shop-detail-media .carousel-item img {
+            height: 240px;
+        }
+
+        .shop-detail-options {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-page">
+    {% with images=product.images.all variants=product.variants.all %}
+    <div class="shop-detail">
+        <div class="row g-4 align-items-start">
+
+            <!-- تصاویر محصول -->
+            <div class="col-lg-5">
+                <div class="shop-detail-media">
+                    {% if images %}
+                        <div id="product-gallery" class="carousel slide">
+                            {% if images|length > 1 %}
+                                <div class="carousel-indicators">
+                                    {% for image in images %}
+                                        <button
+                                            type="button"
+                                            data-bs-target="#product-gallery"
+                                            data-bs-slide-to="{{ forloop.counter0 }}"
+                                            class="{% if forloop.first %}active{% endif %}"
+                                            {% if forloop.first %}aria-current="true"{% endif %}
+                                            aria-label="تصویر {{ forloop.counter }}"
+                                        ></button>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="carousel-inner">
+                                {% for image in images %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <img
+                                            src="{{ image.image.url }}"
+                                            alt="{{ product.title }} - تصویر {{ forloop.counter }}"
+                                            {% if not forloop.first %}loading="lazy"{% endif %}
+                                        >
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if images|length > 1 %}
+                                <button
+                                    class="carousel-control-prev"
+                                    type="button"
+                                    data-bs-target="#product-gallery"
+                                    data-bs-slide="prev"
+                                    aria-label="تصویر قبلی"
+                                >
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">قبلی</span>
+                                </button>
+
+                                <button
+                                    class="carousel-control-next"
+                                    type="button"
+                                    data-bs-target="#product-gallery"
+                                    data-bs-slide="next"
+                                    aria-label="تصویر بعدی"
+                                >
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">بعدی</span>
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center p-4">
+                            تصویری برای این محصول ثبت نشده است.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- اطلاعات محصول -->
+            <div class="col-lg-7">
+                <h1 class="shop-heading mb-3">{{ product.title }}</h1>
+
+                {% if product.description %}
+                    <div class="shop-description mb-4">
+                        {{ product.description|linebreaks }}
+                    </div>
+                {% endif %}
+
+                {% if variants %}
+                    <!-- محصول واریانت‌دار -->
+                    <div class="shop-detail-options mb-4">
+                        <div>
+                            <label for="variant-color" class="form-label fw-semibold">
+                                رنگ
+                            </label>
+                            <select id="variant-color" class="form-select"></select>
+                        </div>
+
+                        <div>
+                            <label for="variant-size" class="form-label fw-semibold">
+                                سایز
+                            </label>
+                            <select id="variant-size" class="form-select"></select>
+                        </div>
+                    </div>
+
+                    <!-- داده‌ها از فیلدهای واقعی واریانت خوانده می‌شوند -->
+                    <div id="variant-data" hidden>
+                        {% for variant in variants %}
+                            <span
+                                data-variant-id="{{ variant.id }}"
+                                data-color="{{ variant.color|default_if_none:'' }}"
+                                data-size="{{ variant.size|default_if_none:'' }}"
+                                data-price="{{ variant.price|unlocalize }}"
+                                data-quantity="{{ variant.quantity|unlocalize }}"
+                            ></span>
+                        {% endfor %}
+                    </div>
+
+                    {% with first_variant=variants.0 %}
+                        <div id="price-display" class="shop-price mb-2">
+                            {{ first_variant.price|intcomma }} تومان
+                        </div>
+
+                        <p id="stock-display" class="mb-4" aria-live="polite">
+                            {% if first_variant.quantity > 0 %}
+                                <span class="text-success">
+                                    موجود ({{ first_variant.quantity }} عدد)
+                                </span>
+                            {% else %}
+                                <span class="text-danger">ناموجود</span>
+                            {% endif %}
+                        </p>
+                    {% endwith %}
+
+                {% else %}
+                    <!-- محصول ساده: بدون هیچ واریانتی -->
+                    {% if product.color or product.size %}
+                        <div class="mb-3">
+                            {% if product.color %}
+                                <p class="mb-1">
+                                    <strong>رنگ:</strong> {{ product.color }}
+                                </p>
+                            {% endif %}
+
+                            {% if product.size %}
+                                <p class="mb-1">
+                                    <strong>سایز:</strong> {{ product.size }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div id="price-display" class="shop-price mb-2">
+                        {{ product.price|intcomma }} تومان
+                    </div>
+
+                    <p id="stock-display" class="mb-4" aria-live="polite">
+                        {% if product.quantity > 0 %}
+                            <span class="text-success">
+                                موجود ({{ product.quantity }} عدد)
+                            </span>
+                        {% else %}
+                            <span class="text-danger">ناموجود</span>
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <!-- فعلاً نمایشی است؛ سبد خرید هنوز پیاده‌سازی نشده -->
+                <button
+                    id="add-to-cart-button"
+                    type="button"
+                    class="shop-btn"
+                    {% if variants %}
+                        {% if variants.0.quantity <= 0 %}disabled{% endif %}
+                    {% else %}
+                        {% if product.quantity <= 0 %}disabled{% endif %}
+                    {% endif %}
+                >
+                    افزودن به سبد خرید
+                </button>
+
+                <p id="cart-message" class="small text-muted mt-2" aria-live="polite">
+                    سبد خرید هنوز پیاده‌سازی نشده است.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // اسلایدر بعد از بارگذاری Bootstrap Bundle در base.html فعال می‌شود.
+        const gallery = document.getElementById("product-gallery");
+
+        if (gallery && window.bootstrap) {
+            new bootstrap.Carousel(gallery, {
+                interval: false,
+                wrap: true
+            });
+        }
+
+        const addToCartButton = document.getElementById("add-to-cart-button");
+        const cartMessage = document.getElementById("cart-message");
+
+        addToCartButton.addEventListener("click", function () {
+            cartMessage.textContent = "سبد خرید هنوز پیاده‌سازی نشده است.";
+        });
+
+        const variantData = document.getElementById("variant-data");
+
+        // اگر واریانتی وجود ندارد، قیمت و موجودی محصول اصلی
+        // از قبل در HTML نمایش داده شده‌اند و کار دیگری لازم نیست.
+        if (!variantData) {
+            return;
+        }
+
+        const variants = Array.from(
+            variantData.querySelectorAll("[data-variant-id]")
+        ).map(function (element) {
+            return {
+                id: element.dataset.variantId,
+                color: element.dataset.color || "",
+                size: element.dataset.size || "",
+                price: Number(element.dataset.price),
+                quantity: Number(element.dataset.quantity)
+            };
+        });
+
+        const colorSelect = document.getElementById("variant-color");
+        const sizeSelect = document.getElementById("variant-size");
+        const priceDisplay = document.getElementById("price-display");
+        const stockDisplay = document.getElementById("stock-display");
+
+        function addOption(select, value, emptyLabel) {
+            const label = value || emptyLabel;
+            select.add(new Option(label, value));
+        }
+
+        function updateProductInfo() {
+            const selectedVariant = variants.find(function (variant) {
+                return variant.color === colorSelect.value &&
+                       variant.size === sizeSelect.value;
+            });
+
+            if (!selectedVariant) {
+                priceDisplay.textContent = "قیمت نامشخص";
+                stockDisplay.textContent = "این ترکیب موجود نیست.";
+                stockDisplay.className = "mb-4 text-danger";
+                addToCartButton.disabled = true;
+                return;
+            }
+
+            priceDisplay.textContent =
+                new Intl.NumberFormat("en-US", {
+                    maximumFractionDigits: 2
+                }).format(selectedVariant.price) + " تومان";
+
+            if (selectedVariant.quantity > 0) {
+                stockDisplay.textContent =
+                    "موجود (" + selectedVariant.quantity + " عدد)";
+                stockDisplay.className = "mb-4 text-success";
+                addToCartButton.disabled = false;
+            } else {
+                stockDisplay.textContent = "ناموجود";
+                stockDisplay.className = "mb-4 text-danger";
+                addToCartButton.disabled = true;
+            }
+        }
+
+        function updateSizes(preferredSize) {
+            const availableVariants = variants.filter(function (variant) {
+                return variant.color === colorSelect.value;
+            });
+
+            sizeSelect.innerHTML = "";
+
+            const sizes = [...new Set(
+                availableVariants.map(function (variant) {
+                    return variant.size;
+                })
+            )];
+
+            sizes.forEach(function (size) {
+                addOption(sizeSelect, size, "بدون سایز");
+            });
+
+            const preferredExists = sizes.includes(preferredSize);
+
+            if (preferredExists) {
+                sizeSelect.value = preferredSize;
+            } else {
+                const firstInStock = availableVariants.find(function (variant) {
+                    return variant.quantity > 0;
+                });
+
+                sizeSelect.value = firstInStock
+                    ? firstInStock.size
+                    : (sizes[0] || "");
+            }
+
+            updateProductInfo();
+        }
+
+        const colors = [...new Set(
+            variants.map(function (variant) {
+                return variant.color;
+            })
+        )];
+
+        colors.forEach(function (color) {
+            addOption(colorSelect, color, "بدون رنگ");
+        });
+
+        const initialVariant =
+            variants.find(function (variant) {
+                return variant.quantity > 0;
+            }) || variants[0];
+
+        if (initialVariant) {
+            colorSelect.value = initialVariant.color;
+            updateSizes(initialVariant.size);
+        }
+
+        colorSelect.addEventListener("change", function () {
+            updateSizes();
+        });
+
+        sizeSelect.addEventListener("change", updateProductInfo);
+    });
+</script>
+{% endblock %}

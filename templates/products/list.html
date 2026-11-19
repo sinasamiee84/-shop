@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="shop-page container py-4">
+    {% for item in categories_with_products %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <h3 class="h5 text-dark fw-bold m-0 d-flex align-items-center">
+                    <span class="badge bg-success bg-opacity-10 text-success me-2 rounded-circle p-2" style="width: 8px; height: 8px; display: inline-block;"></span>
+                    {{ item.category.name }}
+                </h3>
+                <a href="{% url 'products:category_detail' item.category.slug %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap">
+                    مشاهده بیشتر <i class="bi bi-chevron-left small ms-1"></i>
+                </a>
+            </div>
+
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                {% for product in item.products %}
+                    <div class="col">{% include "products/_product_card.html" %}</div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

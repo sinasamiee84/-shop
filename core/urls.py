@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from apps.account.views import HomeView
-
+from apps.products.views import HomePageView
 urlpatterns = [
-    path('', HomeView.as_view(), name='home'),
+    path('', HomePageView.as_view(), name='home'),
     path('admin/', admin.site.urls),
-    path('account/', include('apps.account.urls')),
+    path('account/', include('apps.account.urls', namespace='account')),
+    path('products/', include('apps.products.urls', namespace='products')),
+
 ]
 
 if settings.DEBUG:

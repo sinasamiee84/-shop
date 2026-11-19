@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="shop-page">
+    <div class="shop-section-header mb-4">
+        <div>
+            <h1 class="shop-heading">محصولات {{ category.name }}</h1>
+            <p class="text-muted mt-2 mb-0">
+                همه محصولات فعال این دسته‌بندی
+            </p>
+        </div>
+
+        <a href="{% url 'products:list' %}" class="shop-btn shop-btn--outline">
+            بازگشت به دسته‌بندی‌ها
+        </a>
+    </div>
+
+    {% if products %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+            {% for product in products %}
+                <div class="col">
+                    {% include "products/_product_card.html" %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="shop-empty">
+            هنوز محصول فعالی در این دسته وجود ندارد.
+        </div>
+    {% endif %}
+
+    {% if is_paginated %}
+        <nav class="mt-5" aria-label="صفحه‌بندی محصولات">
+            <ul class="pagination justify-content-center flex-wrap gap-1">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link rounded"
+                           href="?page={{ page_obj.previous_page_number }}">
+                            قبلی
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for number in paginator.page_range %}
+                    <li class="page-item {% if number == page_obj.number %}active{% endif %}">
+                        <a class="page-link rounded"
+                           href="?page={{ number }}"
+                           {% if number == page_obj.number %}aria-current="page"{% endif %}>
+                            {{ number }}
+                        </a>
+                    </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link rounded"
+                           href="?page={{ page_obj.next_page_number }}">
+                            بعدی
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

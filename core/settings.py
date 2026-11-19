@@ -44,6 +44,9 @@ ALLOWED_HOSTS = env.list(
 )
 
 # Application definition
+USE_THOUSAND_SEPARATOR = True
+NUMBER_GROUPING = 3
+THOUSAND_SEPARATOR = ","
 
 INSTALLED_APPS = [
     "unfold",
@@ -55,12 +58,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "django.contrib.humanize",
     'django.contrib.staticfiles',
 
     "crispy_forms",
     "crispy_bootstrap5",
 
     'apps.account',
+    'apps.products',
 ]
 
 MIDDLEWARE = [
@@ -160,22 +165,74 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 #Un-fold
 
 UNFOLD = {
-    "SITE_TITLE": "فروشگاه تجهیزات پزشکی طب شاپ",
-    "SITE_HEADER": "مدیریت طب شاپ",
+    "SITE_TITLE": "طب‌شاپ | مدیریت فروشگاه",
+    "SITE_HEADER": "مدیریت طب‌شاپ",
     "SITE_URL": "/",
+    "SITE_SYMBOL": "medical_services",
+
     "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
         "navigation": [
             {
-                "title": "کاربران و احراز هویت",
+                "title": "فروشگاه",
+                "separator": True,
                 "items": [
                     {
-                        "title": "کاربران",
-                        "icon": "person",
+                        "title": "دسته‌بندی‌ها",
+                        "icon": "category",
+                        "link": "/admin/products/category/",
+                    },
+                    {
+                        "title": "محصولات",
+                        "icon": "inventory_2",
+                        "link": "/admin/products/product/",
+                    },
+                    {
+                        "title": "واریانت‌های محصول",
+                        "icon": "tune",
+                        "link": "/admin/products/productvariant/",
+                    },
+                    {
+                        "title": "تصاویر محصولات",
+                        "icon": "imagesmode",
+                        "link": "/admin/products/productimage/",
+                    },
+                ],
+            },
+            {
+                "title": "اطلاعات پایه",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "برندها",
+                        "icon": "sell",
+                        "link": "/admin/products/brand/",
+                    },
+                    {
+                        "title": "مدل‌های برند",
+                        "icon": "style",
+                        "link": "/admin/products/brandmodel/",
+                    },
+                    {
+                        "title": "رنگ‌ها",
+                        "icon": "palette",
+                        "link": "/admin/products/color/",
+                    },
+                ],
+            },
+            {
+                "title": "کاربران",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "مدیریت کاربران",
+                        "icon": "group",
                         "link": "/admin/account/customuser/",
                     },
                     {
-                        "title": "کدهای OTP",
-                        "icon": "vpn_key",
+                        "title": "کدهای ورود",
+                        "icon": "password",
                         "link": "/admin/account/otpcode/",
                     },
                 ],
@@ -183,6 +240,7 @@ UNFOLD = {
         ],
     },
 }
+
 
 
 #zarinpal

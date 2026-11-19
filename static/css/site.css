@@ -1,4 +1,4 @@
-:root {
+root {
     --green-900: #0d4f42;
     --green-800: #126b56;
     --green-700: #178363;
@@ -10,9 +10,11 @@
     --line: #e3eee8;
 }
 
+
 * {
     box-sizing: border-box;
 }
+
 
 body {
     min-height: 100vh;
@@ -27,6 +29,7 @@ body {
     font-family: "Vazirmatn", Tahoma, sans-serif;
 }
 
+
 button,
 input,
 select,
@@ -34,15 +37,18 @@ textarea {
     font: inherit;
 }
 
+
 a {
     text-decoration: none;
 }
+
 
 .site-header {
     background: rgba(255, 255, 255, .88);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(12px);
 }
+
 
 .header-inner {
     min-height: 78px;
@@ -52,6 +58,7 @@ a {
     gap: 16px;
 }
 
+
 .brand {
     display: inline-flex;
     align-items: center;
@@ -59,9 +66,11 @@ a {
     color: var(--green-900);
 }
 
+
 .brand:hover {
     color: var(--green-700);
 }
+
 
 .brand-mark {
     display: grid;
@@ -74,15 +83,18 @@ a {
     font-size: 23px;
 }
 
+
 .brand strong,
 .brand small {
     display: block;
 }
 
+
 .brand strong {
     font-size: 20px;
     line-height: 1.2;
 }
+
 
 .brand small {
     margin-top: 3px;
@@ -90,11 +102,13 @@ a {
     font-size: 11px;
 }
 
+
 .header-links {
     display: flex;
     align-items: center;
     gap: 20px;
 }
+
 
 .header-links a,
 .nav-logout {
@@ -103,14 +117,17 @@ a {
     font-weight: 700;
 }
 
+
 .header-links a:hover,
 .nav-logout:hover {
     color: var(--green-500);
 }
 
+
 .header-links form {
     margin: 0;
 }
+
 
 .nav-logout {
     padding: 0;
@@ -119,11 +136,13 @@ a {
     cursor: pointer;
 }
 
+
 .header-links .nav-signup {
     padding: 9px 17px;
     border-radius: 12px;
     background: var(--green-100);
 }
+
 
 .page-main {
     display: flex;
@@ -131,6 +150,7 @@ a {
     align-items: center;
     padding: 55px 0;
 }
+
 
 .auth-layout {
     min-height: 590px;
@@ -143,6 +163,7 @@ a {
     box-shadow: 0 24px 75px rgba(16, 80, 60, .10);
 }
 
+
 .intro-panel {
     position: relative;
     overflow: hidden;
@@ -153,11 +174,13 @@ a {
     color: #fff;
 }
 
+
 .intro-content {
     position: relative;
     z-index: 1;
     max-width: 410px;
 }
+
 
 .intro-badge {
     display: inline-flex;
@@ -170,12 +193,14 @@ a {
     font-size: 12px;
 }
 
+
 .badge-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #a6efc8;
 }
+
 
 .intro-panel h1 {
     margin: 34px 0 17px;
@@ -184,10 +209,12 @@ a {
     line-height: 1.65;
 }
 
+
 .intro-panel p {
     color: #d4eee3;
     line-height: 2.1;
 }
+
 
 .intro-feature {
     display: flex;
@@ -196,6 +223,7 @@ a {
     margin-top: 21px;
     font-size: 14px;
 }
+
 
 .feature-icon {
     display: grid;
@@ -207,15 +235,18 @@ a {
     background: rgba(255, 255, 255, .15);
 }
 
+
 .intro-decoration span {
     position: absolute;
     pointer-events: none;
 }
 
+
 .deco-circle {
     border: 1px solid rgba(255, 255, 255, .15);
     border-radius: 50%;
 }
+
 
 .deco-circle-one {
     width: 310px;
@@ -224,12 +255,14 @@ a {
     left: -100px;
 }
 
+
 .deco-circle-two {
     width: 190px;
     height: 190px;
     top: -80px;
     left: 35px;
 }
+
 
 .deco-cross {
     left: 55px;
@@ -238,6 +271,7 @@ a {
     font-size: 150px;
 }
 
+
 .form-panel {
     display: flex;
     align-items: center;
@@ -245,16 +279,19 @@ a {
     padding: 48px 30px;
 }
 
+
 .auth-card {
     width: 100%;
     max-width: 410px;
 }
+
 
 .card-kicker {
     color: var(--green-700);
     font-size: 13px;
     font-weight: 700;
 }
+
 
 .auth-card h2 {
     margin: 11px 0 9px;
@@ -263,6 +300,7 @@ a {
     font-weight: 800;
 }
 
+
 .card-description {
     margin-bottom: 27px;
     color: var(--muted);
@@ -270,9 +308,11 @@ a {
     line-height: 2;
 }
 
+
 .field-wrap {
     margin-bottom: 19px;
 }
+
 
 .field-wrap label {
     display: block;
@@ -281,6 +321,7 @@ a {
     font-size: 13px;
     font-weight: 700;
 }
+
 
 .auth-form input:not([type="hidden"]):not([type="checkbox"]),
 .auth-form select,
@@ -297,12 +338,14 @@ a {
     transition: border-color .2s, box-shadow .2s;
 }
 
+
 .auth-form input:focus,
 .auth-form select:focus,
 .auth-form textarea:focus {
     border-color: var(--green-500);
     box-shadow: 0 0 0 4px rgba(50, 173, 129, .13);
 }
+
 
 .field-help {
     margin-top: 8px;
@@ -311,16 +354,19 @@ a {
     line-height: 1.9;
 }
 
+
 .field-help ul {
     padding-right: 20px;
     margin: 5px 0;
 }
+
 
 .field-error {
     margin-top: 7px;
     color: #b4233b;
     font-size: 12px;
 }
+
 
 .primary-action {
     display: block;
@@ -339,11 +385,13 @@ a {
     transition: transform .2s, box-shadow .2s;
 }
 
+
 .primary-action:hover {
     transform: translateY(-2px);
     box-shadow: 0 14px 27px rgba(18, 107, 86, .23);
     color: #fff;
 }
+
 
 .secondary-action {
     display: block;
@@ -360,9 +408,11 @@ a {
     cursor: pointer;
 }
 
+
 .secondary-action:hover {
     background: var(--green-50);
 }
+
 
 .form-bottom {
     margin-top: 22px;
@@ -371,22 +421,26 @@ a {
     text-align: center;
 }
 
+
 .form-bottom a,
 .inline-link {
     color: var(--green-700);
     font-weight: 700;
 }
 
+
 .form-bottom a:hover,
 .inline-link:hover {
     color: var(--green-900);
 }
+
 
 .inline-link {
     display: inline-block;
     margin-top: 17px;
     font-size: 13px;
 }
+
 
 .notice {
     margin-bottom: 16px;
@@ -397,11 +451,13 @@ a {
     line-height: 1.9;
 }
 
+
 .notice--success {
     border-color: #b8e7cb;
     background: #ecf9f0;
     color: #176341;
 }
+
 
 .notice--error {
     border-color: #f0c3c8;
@@ -409,12 +465,14 @@ a {
     color: #9b2536;
 }
 
+
 .notice--info,
 .notice--warning {
     border-color: #c7e5d8;
     background: #f0f8f4;
     color: #315f4c;
 }
+
 
 .success-icon {
     display: grid;
@@ -428,6 +486,7 @@ a {
     font-size: 34px;
 }
 
+
 .site-footer {
     padding: 20px 0;
     color: var(--muted);
@@ -435,15 +494,18 @@ a {
     text-align: center;
 }
 
+
 @media (max-width: 991px) {
     .auth-layout {
         grid-template-columns: 1fr;
         min-height: auto;
     }
 
+
     .intro-panel {
         display: none;
     }
+
 
     .form-panel {
         min-height: 500px;
@@ -451,35 +513,43 @@ a {
     }
 }
 
+
 @media (max-width: 575px) {
     .page-main {
         padding: 25px 0;
     }
 
+
     .header-inner {
         min-height: 70px;
     }
 
+
     .header-links {
         gap: 11px;
     }
+
 
     .header-links a,
     .nav-logout {
         font-size: 12px;
     }
 
+
     .brand strong {
         font-size: 18px;
     }
+
 
     .brand small {
         font-size: 10px;
     }
 
+
     .auth-layout {
         border-radius: 22px;
     }
+
 
     .form-panel {
         padding: 38px 20px;
