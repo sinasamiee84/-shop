@@ -18,7 +18,7 @@ from .forms import (
 )
 from .models import CustomUser, OtpCode
 from .services import ActiveOtpExists, OtpSendError, create_otp, verify_otp_code
-
+from apps.cart.services import merge_session_cart_to_user_cart
 ACTIVE_OTP_MSG = "کد قبلی هنوز معتبر است؛ لطفاً تا پایان اعتبار آن صبر کنید."
 SEND_FAIL_MSG = "ارسال کد تأیید ممکن نشد. لطفاً دوباره تلاش کنید."
 # پیام یکسان برای شماره‌های موجود و ناموجود تا فهرست شماره‌ها قابل کشف نباشد
@@ -154,12 +154,17 @@ class LoginView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        login(self.request, form.get_user())
+        user = form.get_user()
+        login(self.request, user)
+
+        # **انتقال و حفظ سبد خرید مهمان به کاربر لاگین‌کرده**
+        merge_session_cart_to_user_cart(self.request, user)
+
         next_url = self.request.POST.get("next") or self.request.GET.get("next")
         if next_url and url_has_allowed_host_and_scheme(
-            next_url,
-            allowed_hosts={self.request.get_host()},
-            require_https=self.request.is_secure(),
+                next_url,
+                allowed_hosts={self.request.get_host()},
+                require_https=self.request.is_secure(),
         ):
             return redirect(next_url)
         return redirect("home")

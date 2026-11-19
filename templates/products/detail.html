@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% load humanize l10n %}
 
-{% block title %}{{ product.title }}{% endblock %}
+
+{% block title %}
+    {{ product.title }}
+{% endblock %}
+
 
 {% block extra_head %}
 <style>
@@ -36,9 +40,40 @@
         gap: 14px;
     }
 
+    .shop-detail-options .form-select {
+        min-height: 46px;
+        border-radius: 12px;
+    }
+
     .shop-detail-options .form-select:focus {
         border-color: #157454;
         box-shadow: 0 0 0 .2rem rgba(21, 116, 84, .15);
+    }
+
+    .shop-price {
+        color: #157454;
+        font-size: 1.4rem;
+        font-weight: 800;
+    }
+
+    .shop-btn {
+        border: 0;
+        border-radius: 12px;
+        background-color: #157454;
+        color: white;
+        padding: 12px 25px;
+        font-weight: 700;
+        transition: .2s ease;
+    }
+
+    .shop-btn:hover:not(:disabled) {
+        background-color: #105c42;
+        transform: translateY(-1px);
+    }
+
+    .shop-btn:disabled {
+        background-color: #adb5bd;
+        cursor: not-allowed;
     }
 
     @media (max-width: 576px) {
@@ -53,43 +88,58 @@
 </style>
 {% endblock %}
 
+
 {% block content %}
 <div class="shop-page">
+
     {% with images=product.images.all variants=product.variants.all %}
+
     <div class="shop-detail">
         <div class="row g-4 align-items-start">
 
             <!-- تصاویر محصول -->
             <div class="col-lg-5">
                 <div class="shop-detail-media">
+
                     {% if images %}
                         <div id="product-gallery" class="carousel slide">
+
                             {% if images|length > 1 %}
                                 <div class="carousel-indicators">
+
                                     {% for image in images %}
                                         <button
                                             type="button"
                                             data-bs-target="#product-gallery"
                                             data-bs-slide-to="{{ forloop.counter0 }}"
                                             class="{% if forloop.first %}active{% endif %}"
-                                            {% if forloop.first %}aria-current="true"{% endif %}
+                                            {% if forloop.first %}
+                                                aria-current="true"
+                                            {% endif %}
                                             aria-label="تصویر {{ forloop.counter }}"
                                         ></button>
                                     {% endfor %}
+
                                 </div>
                             {% endif %}
 
+
                             <div class="carousel-inner">
+
                                 {% for image in images %}
                                     <div class="carousel-item {% if forloop.first %}active{% endif %}">
                                         <img
                                             src="{{ image.image.url }}"
                                             alt="{{ product.title }} - تصویر {{ forloop.counter }}"
-                                            {% if not forloop.first %}loading="lazy"{% endif %}
+                                            {% if not forloop.first %}
+                                                loading="lazy"
+                                            {% endif %}
                                         >
                                     </div>
                                 {% endfor %}
+
                             </div>
+
 
                             {% if images|length > 1 %}
                                 <button
@@ -99,9 +149,16 @@
                                     data-bs-slide="prev"
                                     aria-label="تصویر قبلی"
                                 >
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">قبلی</span>
+                                    <span
+                                        class="carousel-control-prev-icon"
+                                        aria-hidden="true"
+                                    ></span>
+
+                                    <span class="visually-hidden">
+                                        قبلی
+                                    </span>
                                 </button>
+
 
                                 <button
                                     class="carousel-control-next"
@@ -110,22 +167,35 @@
                                     data-bs-slide="next"
                                     aria-label="تصویر بعدی"
                                 >
-                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">بعدی</span>
+                                    <span
+                                        class="carousel-control-next-icon"
+                                        aria-hidden="true"
+                                    ></span>
+
+                                    <span class="visually-hidden">
+                                        بعدی
+                                    </span>
                                 </button>
                             {% endif %}
+
                         </div>
                     {% else %}
                         <div class="text-muted text-center p-4">
                             تصویری برای این محصول ثبت نشده است.
                         </div>
                     {% endif %}
+
                 </div>
             </div>
 
+
             <!-- اطلاعات محصول -->
             <div class="col-lg-7">
-                <h1 class="shop-heading mb-3">{{ product.title }}</h1>
+
+                <h1 class="shop-heading mb-3">
+                    {{ product.title }}
+                </h1>
+
 
                 {% if product.description %}
                     <div class="shop-description mb-4">
@@ -133,250 +203,498 @@
                     </div>
                 {% endif %}
 
-                {% if variants %}
-                    <!-- محصول واریانت‌دار -->
-                    <div class="shop-detail-options mb-4">
-                        <div>
-                            <label for="variant-color" class="form-label fw-semibold">
-                                رنگ
-                            </label>
-                            <select id="variant-color" class="form-select"></select>
+
+                <!-- فرم افزودن به سبد خرید -->
+                <form
+                    method="post"
+                    action="{% url 'cart:add_to_cart' product.id %}"
+                >
+                    {% csrf_token %}
+
+                    <!-- این مقدار توسط JavaScript تنظیم می‌شود -->
+                    <input
+                        type="hidden"
+                        name="variant_id"
+                        id="selected-variant-id"
+                        value=""
+                    >
+
+
+                    {% if variants %}
+
+                        <!-- اطلاعات و انتخاب واریانت -->
+                        <div class="shop-detail-options mb-4">
+
+                            <div>
+                                <label
+                                    for="variant-color"
+                                    class="form-label fw-semibold"
+                                >
+                                    رنگ
+                                </label>
+
+                                <select
+                                    id="variant-color"
+                                    class="form-select"
+                                ></select>
+                            </div>
+
+
+                            <div>
+                                <label
+                                    for="variant-size"
+                                    class="form-label fw-semibold"
+                                >
+                                    سایز
+                                </label>
+
+                                <select
+                                    id="variant-size"
+                                    class="form-select"
+                                ></select>
+                            </div>
+
                         </div>
 
-                        <div>
-                            <label for="variant-size" class="form-label fw-semibold">
-                                سایز
-                            </label>
-                            <select id="variant-size" class="form-select"></select>
-                        </div>
-                    </div>
 
-                    <!-- داده‌ها از فیلدهای واقعی واریانت خوانده می‌شوند -->
-                    <div id="variant-data" hidden>
-                        {% for variant in variants %}
-                            <span
-                                data-variant-id="{{ variant.id }}"
-                                data-color="{{ variant.color|default_if_none:'' }}"
-                                data-size="{{ variant.size|default_if_none:'' }}"
-                                data-price="{{ variant.price|unlocalize }}"
-                                data-quantity="{{ variant.quantity|unlocalize }}"
-                            ></span>
-                        {% endfor %}
-                    </div>
+                        <!-- اطلاعات واریانت‌ها برای JavaScript -->
+                        <div id="variant-data" hidden>
 
-                    {% with first_variant=variants.0 %}
-                        <div id="price-display" class="shop-price mb-2">
-                            {{ first_variant.price|intcomma }} تومان
+                            {% for variant in variants %}
+                                <span
+                                    data-variant-id="{{ variant.id }}"
+                                    data-color="{{ variant.color|default_if_none:'' }}"
+                                    data-size="{{ variant.size|default_if_none:'' }}"
+                                    data-price="{{ variant.price|unlocalize }}"
+                                    data-quantity="{{ variant.quantity|unlocalize }}"
+                                ></span>
+                            {% endfor %}
+
                         </div>
 
-                        <p id="stock-display" class="mb-4" aria-live="polite">
-                            {% if first_variant.quantity > 0 %}
+
+                        {% with first_variant=variants.0 %}
+
+                            <div
+                                id="price-display"
+                                class="shop-price mb-2"
+                            >
+                                {{ first_variant.price|intcomma }}
+                                تومان
+                            </div>
+
+
+                            <p
+                                id="stock-display"
+                                class="mb-4"
+                                aria-live="polite"
+                            >
+                                {% if first_variant.quantity > 0 %}
+                                    <span class="text-success">
+                                        موجود
+                                        ({{ first_variant.quantity }} عدد)
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        ناموجود
+                                    </span>
+                                {% endif %}
+                            </p>
+
+                        {% endwith %}
+
+                    {% else %}
+
+                        <!-- محصول ساده -->
+                        {% if product.color or product.size %}
+                            <div class="mb-3">
+
+                                {% if product.color %}
+                                    <p class="mb-1">
+                                        <strong>رنگ:</strong>
+                                        {{ product.color }}
+                                    </p>
+                                {% endif %}
+
+
+                                {% if product.size %}
+                                    <p class="mb-1">
+                                        <strong>سایز:</strong>
+                                        {{ product.size }}
+                                    </p>
+                                {% endif %}
+
+                            </div>
+                        {% endif %}
+
+
+                        <div
+                            id="price-display"
+                            class="shop-price mb-2"
+                        >
+                            {{ product.price|intcomma }}
+                            تومان
+                        </div>
+
+
+                        <p
+                            id="stock-display"
+                            class="mb-4"
+                            aria-live="polite"
+                        >
+                            {% if product.quantity > 0 %}
                                 <span class="text-success">
-                                    موجود ({{ first_variant.quantity }} عدد)
+                                    موجود
+                                    ({{ product.quantity }} عدد)
                                 </span>
                             {% else %}
-                                <span class="text-danger">ناموجود</span>
+                                <span class="text-danger">
+                                    ناموجود
+                                </span>
                             {% endif %}
                         </p>
-                    {% endwith %}
 
-                {% else %}
-                    <!-- محصول ساده: بدون هیچ واریانتی -->
-                    {% if product.color or product.size %}
-                        <div class="mb-3">
-                            {% if product.color %}
-                                <p class="mb-1">
-                                    <strong>رنگ:</strong> {{ product.color }}
-                                </p>
-                            {% endif %}
-
-                            {% if product.size %}
-                                <p class="mb-1">
-                                    <strong>سایز:</strong> {{ product.size }}
-                                </p>
-                            {% endif %}
-                        </div>
                     {% endif %}
 
-                    <div id="price-display" class="shop-price mb-2">
-                        {{ product.price|intcomma }} تومان
-                    </div>
 
-                    <p id="stock-display" class="mb-4" aria-live="polite">
-                        {% if product.quantity > 0 %}
-                            <span class="text-success">
-                                موجود ({{ product.quantity }} عدد)
-                            </span>
+                    <button
+                        id="add-to-cart-button"
+                        type="submit"
+                        class="shop-btn"
+                        {% if variants %}
+                            {% if variants.0.quantity <= 0 %}
+                                disabled
+                            {% endif %}
                         {% else %}
-                            <span class="text-danger">ناموجود</span>
+                            {% if product.quantity <= 0 %}
+                                disabled
+                            {% endif %}
                         {% endif %}
-                    </p>
-                {% endif %}
+                    >
+                        افزودن به سبد خرید
+                    </button>
 
-                <!-- فعلاً نمایشی است؛ سبد خرید هنوز پیاده‌سازی نشده -->
-                <button
-                    id="add-to-cart-button"
-                    type="button"
-                    class="shop-btn"
-                    {% if variants %}
-                        {% if variants.0.quantity <= 0 %}disabled{% endif %}
-                    {% else %}
-                        {% if product.quantity <= 0 %}disabled{% endif %}
-                    {% endif %}
-                >
-                    افزودن به سبد خرید
-                </button>
+                </form>
 
-                <p id="cart-message" class="small text-muted mt-2" aria-live="polite">
-                    سبد خرید هنوز پیاده‌سازی نشده است.
-                </p>
             </div>
+
         </div>
     </div>
+
     {% endwith %}
+
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // اسلایدر بعد از بارگذاری Bootstrap Bundle در base.html فعال می‌شود.
-        const gallery = document.getElementById("product-gallery");
+document.addEventListener("DOMContentLoaded", function () {
 
-        if (gallery && window.bootstrap) {
-            new bootstrap.Carousel(gallery, {
-                interval: false,
-                wrap: true
-            });
-        }
+    /*
+     * فعال‌سازی گالری تصاویر
+     */
+    const gallery = document.getElementById("product-gallery");
 
-        const addToCartButton = document.getElementById("add-to-cart-button");
-        const cartMessage = document.getElementById("cart-message");
+    if (gallery && window.bootstrap) {
+        new bootstrap.Carousel(gallery, {
+            interval: false,
+            wrap: true
+        });
+    }
 
-        addToCartButton.addEventListener("click", function () {
-            cartMessage.textContent = "سبد خرید هنوز پیاده‌سازی نشده است.";
+
+    /*
+     * اگر محصول واریانت نداشته باشد،
+     * نیازی به اجرای کد انتخاب واریانت نیست.
+     */
+    const variantData = document.getElementById("variant-data");
+
+    if (!variantData) {
+        return;
+    }
+
+
+    const addToCartButton = document.getElementById(
+        "add-to-cart-button"
+    );
+
+    const selectedVariantInput = document.getElementById(
+        "selected-variant-id"
+    );
+
+    const colorSelect = document.getElementById(
+        "variant-color"
+    );
+
+    const sizeSelect = document.getElementById(
+        "variant-size"
+    );
+
+    const priceDisplay = document.getElementById(
+        "price-display"
+    );
+
+    const stockDisplay = document.getElementById(
+        "stock-display"
+    );
+
+
+    /*
+     * خواندن اطلاعات واریانت‌ها از HTML
+     */
+    const variants = Array.from(
+        variantData.querySelectorAll("[data-variant-id]")
+    ).map(function (element) {
+        return {
+            id: element.dataset.variantId,
+            color: element.dataset.color || "",
+            size: element.dataset.size || "",
+            price: Number(element.dataset.price),
+            quantity: Number(element.dataset.quantity)
+        };
+    });
+
+
+    /*
+     * خواندن variant_id از URL
+     *
+     * مثال:
+     * /products/5/?variant_id=12
+     */
+    const urlParams = new URLSearchParams(
+        window.location.search
+    );
+
+    const variantIdFromUrl = urlParams.get(
+        "variant_id"
+    );
+
+
+    function addOption(select, value, emptyLabel) {
+        const label = value || emptyLabel;
+
+        select.add(
+            new Option(label, value)
+        );
+    }
+
+
+    function updateProductInfo() {
+        const selectedVariant = variants.find(function (variant) {
+            return (
+                variant.color === colorSelect.value &&
+                variant.size === sizeSelect.value
+            );
         });
 
-        const variantData = document.getElementById("variant-data");
 
-        // اگر واریانتی وجود ندارد، قیمت و موجودی محصول اصلی
-        // از قبل در HTML نمایش داده شده‌اند و کار دیگری لازم نیست.
-        if (!variantData) {
+        if (!selectedVariant) {
+            priceDisplay.textContent = "قیمت نامشخص";
+
+            stockDisplay.textContent =
+                "این ترکیب موجود نیست.";
+
+            stockDisplay.className =
+                "mb-4 text-danger";
+
+            selectedVariantInput.value = "";
+
+            addToCartButton.disabled = true;
+
             return;
         }
 
-        const variants = Array.from(
-            variantData.querySelectorAll("[data-variant-id]")
-        ).map(function (element) {
-            return {
-                id: element.dataset.variantId,
-                color: element.dataset.color || "",
-                size: element.dataset.size || "",
-                price: Number(element.dataset.price),
-                quantity: Number(element.dataset.quantity)
-            };
+
+        /*
+         * تنظیم واریانت انتخاب‌شده در input مخفی فرم
+         */
+        selectedVariantInput.value =
+            selectedVariant.id;
+
+
+        priceDisplay.textContent =
+            new Intl.NumberFormat("en-US", {
+                maximumFractionDigits: 2
+            }).format(selectedVariant.price)
+            + " تومان";
+
+
+        if (selectedVariant.quantity > 0) {
+            stockDisplay.textContent =
+                "موجود ("
+                + selectedVariant.quantity
+                + " عدد)";
+
+            stockDisplay.className =
+                "mb-4 text-success";
+
+            addToCartButton.disabled = false;
+
+        } else {
+            stockDisplay.textContent =
+                "ناموجود";
+
+            stockDisplay.className =
+                "mb-4 text-danger";
+
+            addToCartButton.disabled = true;
+        }
+    }
+
+
+    function updateSizes(preferredSize) {
+        /*
+         * فقط سایزهای مربوط به رنگ انتخاب‌شده را نمایش می‌دهیم.
+         */
+        const availableVariants = variants.filter(function (variant) {
+            return variant.color === colorSelect.value;
         });
 
-        const colorSelect = document.getElementById("variant-color");
-        const sizeSelect = document.getElementById("variant-size");
-        const priceDisplay = document.getElementById("price-display");
-        const stockDisplay = document.getElementById("stock-display");
 
-        function addOption(select, value, emptyLabel) {
-            const label = value || emptyLabel;
-            select.add(new Option(label, value));
-        }
+        sizeSelect.innerHTML = "";
 
-        function updateProductInfo() {
-            const selectedVariant = variants.find(function (variant) {
-                return variant.color === colorSelect.value &&
-                       variant.size === sizeSelect.value;
-            });
 
-            if (!selectedVariant) {
-                priceDisplay.textContent = "قیمت نامشخص";
-                stockDisplay.textContent = "این ترکیب موجود نیست.";
-                stockDisplay.className = "mb-4 text-danger";
-                addToCartButton.disabled = true;
-                return;
-            }
-
-            priceDisplay.textContent =
-                new Intl.NumberFormat("en-US", {
-                    maximumFractionDigits: 2
-                }).format(selectedVariant.price) + " تومان";
-
-            if (selectedVariant.quantity > 0) {
-                stockDisplay.textContent =
-                    "موجود (" + selectedVariant.quantity + " عدد)";
-                stockDisplay.className = "mb-4 text-success";
-                addToCartButton.disabled = false;
-            } else {
-                stockDisplay.textContent = "ناموجود";
-                stockDisplay.className = "mb-4 text-danger";
-                addToCartButton.disabled = true;
-            }
-        }
-
-        function updateSizes(preferredSize) {
-            const availableVariants = variants.filter(function (variant) {
-                return variant.color === colorSelect.value;
-            });
-
-            sizeSelect.innerHTML = "";
-
-            const sizes = [...new Set(
+        const sizes = [
+            ...new Set(
                 availableVariants.map(function (variant) {
                     return variant.size;
                 })
-            )];
+            )
+        ];
 
-            sizes.forEach(function (size) {
-                addOption(sizeSelect, size, "بدون سایز");
-            });
 
-            const preferredExists = sizes.includes(preferredSize);
+        sizes.forEach(function (size) {
+            addOption(
+                sizeSelect,
+                size,
+                "بدون سایز"
+            );
+        });
 
-            if (preferredExists) {
-                sizeSelect.value = preferredSize;
-            } else {
-                const firstInStock = availableVariants.find(function (variant) {
+
+        /*
+         * اگر سایز قبلی وجود داشته باشد، همان را انتخاب می‌کنیم.
+         */
+        const preferredExists = sizes.includes(
+            preferredSize
+        );
+
+
+        if (preferredExists) {
+            sizeSelect.value = preferredSize;
+
+        } else {
+            /*
+             * در غیر این صورت، اولین واریانت موجود
+             * یا اولین سایز را انتخاب می‌کنیم.
+             */
+            const firstInStock = availableVariants.find(
+                function (variant) {
                     return variant.quantity > 0;
-                });
+                }
+            );
 
-                sizeSelect.value = firstInStock
-                    ? firstInStock.size
-                    : (sizes[0] || "");
-            }
 
-            updateProductInfo();
+            sizeSelect.value = firstInStock
+                ? firstInStock.size
+                : (sizes[0] || "");
         }
 
-        const colors = [...new Set(
+
+        updateProductInfo();
+    }
+
+
+    /*
+     * ساخت لیست رنگ‌ها
+     */
+    const colors = [
+        ...new Set(
             variants.map(function (variant) {
                 return variant.color;
             })
-        )];
+        )
+    ];
 
-        colors.forEach(function (color) {
-            addOption(colorSelect, color, "بدون رنگ");
-        });
 
-        const initialVariant =
-            variants.find(function (variant) {
-                return variant.quantity > 0;
-            }) || variants[0];
-
-        if (initialVariant) {
-            colorSelect.value = initialVariant.color;
-            updateSizes(initialVariant.size);
-        }
-
-        colorSelect.addEventListener("change", function () {
-            updateSizes();
-        });
-
-        sizeSelect.addEventListener("change", updateProductInfo);
+    colors.forEach(function (color) {
+        addOption(
+            colorSelect,
+            color,
+            "بدون رنگ"
+        );
     });
+
+
+    /*
+     * انتخاب اولیه:
+     *
+     * اولویت اول:
+     * واریانتی که از URL آمده است.
+     *
+     * اولویت دوم:
+     * اولین واریانت موجود.
+     *
+     * اولویت سوم:
+     * اولین واریانت، حتی اگر ناموجود باشد.
+     */
+    let initialVariant = null;
+
+
+    if (variantIdFromUrl) {
+        initialVariant = variants.find(function (variant) {
+            return String(variant.id) === String(
+                variantIdFromUrl
+            );
+        });
+    }
+
+
+    if (!initialVariant) {
+        initialVariant = variants.find(function (variant) {
+            return variant.quantity > 0;
+        }) || variants[0];
+    }
+
+
+    /*
+     * تنظیم رنگ و سایز واریانت اولیه
+     */
+    if (initialVariant) {
+        colorSelect.value = initialVariant.color;
+
+        updateSizes(initialVariant.size);
+
+        /*
+         * اطمینان از اینکه همان شناسه در فرم ارسال شود
+         */
+        selectedVariantInput.value =
+            initialVariant.id;
+    }
+
+
+    /*
+     * تغییر رنگ
+     */
+    colorSelect.addEventListener(
+        "change",
+        function () {
+            updateSizes("");
+        }
+    );
+
+
+    /*
+     * تغییر سایز
+     */
+    sizeSelect.addEventListener(
+        "change",
+        function () {
+            updateProductInfo();
+        }
+    );
+
+});
 </script>
 {% endblock %}

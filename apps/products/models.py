@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 import uuid
-
+from django.urls import reverse
 
 class Color(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="رنگ")
@@ -143,7 +143,9 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="فعال")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ ویرایش")
+    def get_absolute_url(self):
 
+        return reverse('products:detail', kwargs={'slug': self.slug})
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title, allow_unicode=True)

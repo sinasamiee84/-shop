@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 
     'apps.account',
     'apps.products',
+    'apps.cart',
 ]
 
 MIDDLEWARE = [
@@ -222,6 +223,27 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "سفارش‌ها و تخفیف‌ها",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "سفارش‌ها",
+                        "icon": "receipt_long",
+                        "link": "/admin/cart/order/",
+                    },
+                    {
+                        "title": "سبدهای خرید",
+                        "icon": "shopping_cart",
+                        "link": "/admin/cart/cart/",
+                    },
+                    {
+                        "title": "تخفیف‌ها",
+                        "icon": "local_offer",
+                        "link": "/admin/cart/discount/",
+                    },
+                ],
+            },
+            {
                 "title": "کاربران",
                 "separator": True,
                 "items": [
@@ -240,7 +262,6 @@ UNFOLD = {
         ],
     },
 }
-
 
 
 #zarinpal

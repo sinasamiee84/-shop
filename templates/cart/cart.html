@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}سبد خرید{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- هدر صفحه -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-dark">
+                <i class="bi bi-cart3 me-2 text-success"></i> سبد خرید شما
+            </h2>
+            <p class="text-muted">محصولات انتخابی خود را بررسی و نهایی کنید.</p>
+        </div>
+    </div>
+
+    {% if not lines %}
+        <!-- حالت سبد خرید خالی -->
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center py-5">
+                <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+                    <div class="mb-3 text-muted display-4">
+                        <i class="bi bi-cart-x"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">سبد خرید شما خالی است</h4>
+                    <p class="text-muted mb-4">هنوز محصولی به سبد خرید خود اضافه نکرده‌اید.</p>
+                    <a href="{% url 'products:list' %}" class="btn btn-success btn-lg rounded-3 shadow-sm py-2 px-4 fw-semibold">
+                        بازگشت به فروشگاه
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            <!-- ستون لیست محصولات -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light text-secondary small text-uppercase">
+                                <tr>
+                                    <th class="py-3 rounded-start-3">محصول</th>
+                                    <th class="py-3">قیمت واحد</th>
+                                    <th class="py-3 text-center">تعداد</th>
+                                    <th class="py-3">مجموع</th>
+                                    <th class="py-3 rounded-end-3 text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in lines %}
+                                    <tr>
+                                        <td class="py-3">
+                                            <div class="fw-bold text-dark">{{ line.product.title }}</div>
+                                            {% if line.variant %}
+                                                <small class="text-muted d-block">{{ line.variant }}</small>
+                                            {% endif %}
+                                            {% if line.product_discount %}
+                                                <span class="badge bg-danger bg-opacity-10 text-danger mt-1 small">تخفیف روی محصول</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-3 text-nowrap text-secondary">{{ line.unit_price|intcomma }} تومان</td>
+                                        <td class="py-3" style="width: 100px;">
+                                            <form method="post" action="{% url 'cart:update_cart_item' line.item.pk %}">
+                                                {% csrf_token %}
+                                                <input type="number" name="quantity" value="{{ line.quantity }}" min="1" class="form-control form-control-sm text-center fw-bold" onchange="this.form.submit()">
+                                            </form>
+                                        </td>
+                                        <td class="py-3 text-nowrap fw-semibold text-dark">{{ line.line_total|intcomma }} تومان</td>
+                                        <td class="py-3 text-center">
+                                            <form method="post" action="{% url 'cart:remove_from_cart' line.item.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-2" title="حذف محصول">
+                                                    <i class="bi bi-trash3"></i> حذف
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ستون خلاصه فاکتور و کد تخفیف -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+                    <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">کد تخفیف</h4>
+                    <form method="post" action="{% url 'cart:apply_discount' %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="discount_code" class="form-control bg-white" placeholder="مثال: OFF100">
+                            <button type="submit" class="btn btn-outline-success px-4 fw-semibold">اعمال</button>
+                        </div>
+                    </form>
+
+                    <h4 class="fw-bold mb-3 text-dark border-bottom pb-3">مبلغ کل فاکتور</h4>
+
+                    <div class="d-flex justify-content-between mb-2 text-secondary">
+                        <span>جمع اولیه:</span>
+                        <span>{{ subtotal|intcomma }} تومان</span>
+                    </div>
+
+                    {% if product_discount_total > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span>تخفیف محصولات:</span>
+                            <span>- {{ product_discount_total|intcomma }} تومان</span>
+                        </div>
+                    {% endif %}
+
+                    {% if cart_discount %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>تخفیف فاکتور:</span>
+                            <span>- {{ cart_discount_amount|intcomma }} تومان</span>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fs-6 fw-bold text-dark">مبلغ قابل پرداخت:</span>
+                        <span class="fs-4 fw-extrabold text-success">{{ final_price|intcomma }} تومان</span>
+                    </div>
+
+                    <a href="{% url 'cart:checkout' %}" class="btn btn-success btn-lg w-100 rounded-3 shadow-sm py-3 fw-bold">
+                        ادامه فرآیند خرید <i class="bi bi-arrow-left ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* استایل‌دهی مدرن اینپوت‌ها و جداول */
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
+    input[type="number"] {
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+    input[type="number"]:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    }
+</style>
+{% endblock %}
