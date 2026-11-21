@@ -1,7 +1,9 @@
 import requests
 from django.conf import settings
-
-
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from apps.cart.models import Order , UserDiscountUsage , Discount , Cart
+from django.db.models import  F
 def get_zarinpal_config():
     is_sandbox = getattr(settings, "ZARINPAL_SANDBOX", True)
     merchant_id = getattr(settings, "ZARINPAL_MERCHANT_ID", "")
@@ -103,3 +105,105 @@ def zarinpal_verify(amount, authority):
         None,
         _error_message(response_data, "تراکنش ناموفق بود یا تأیید نشد."),
     )
+
+
+
+
+@transaction.atomic
+def verify_payment_and_complete_order(order_id):
+    """
+    کسر موجودی و تغییر وضعیت سفارش به paid را اتمیک انجام می‌دهد.
+    این تابع فقط پس از تأیید موفق پرداخت نزد درگاه فراخوانی شود.
+    """
+    order = (
+        Order.objects
+        .select_for_update()
+        .filter(pk=order_id)
+        .first()
+    )
+
+    if order is None:
+        return False, "سفارش پیدا نشد."
+
+    # callback ممکن است تکراری باشد؛ سفارش پرداخت‌شده را دوباره پردازش نکن.
+    if order.status == Order.OrderStatus.PAID:
+        return True, "این سفارش قبلاً پرداخت شده است."
+
+    if order.status != Order.OrderStatus.PENDING:
+        return False, "این سفارش در وضعیت قابل پرداخت نیست."
+
+    items = list(
+        order.items
+        .select_related("product", "variant")
+        .all()
+    )
+
+    if not items:
+        return False, "سفارش آیتمی ندارد."
+
+    # ابتدا همهٔ موجودی‌ها را قفل و بررسی می‌کنیم؛
+    # تا پیش از اطمینان از موجودی همهٔ آیتم‌ها، چیزی کم نمی‌شود.
+    for item in items:
+        if item.variant_id:
+            variant = (
+                type(item.variant).objects
+                .select_for_update()
+                .filter(pk=item.variant_id)
+                .first()
+            )
+
+            if variant is None:
+                return False, f"واریانت محصول «{item.product_title}» پیدا نشد."
+
+            item.variant = variant
+
+            if variant.quantity < item.quantity:
+                return False, f"موجودی «{item.product_title}» برای این سفارش کافی نیست."
+
+        elif item.product_id:
+            product = (
+                type(item.product).objects
+                .select_for_update()
+                .filter(pk=item.product_id)
+                .first()
+            )
+
+            if product is None:
+                return False, f"محصول «{item.product_title}» پیدا نشد."
+
+            item.product = product
+
+            if product.quantity < item.quantity:
+                return False, f"موجودی «{item.product_title}» برای این سفارش کافی نیست."
+
+        else:
+            return False, f"محصول سفارش «{item.product_title}» دیگر در دسترس نیست."
+    if order.cart_discount:
+        # ۱. ثبت در جدول تاریخچه استفاده کاربر (جلوگیری از استفاده مجدد)
+        UserDiscountUsage.objects.get_or_create(
+            user=order.user,
+            discount=order.cart_discount,
+            defaults={"order": order}
+        )
+
+        # ۲. افزایش تعداد کل دفعات استفاده از کد تخفیف
+        Discount.objects.filter(pk=order.cart_discount.pk).update(
+            used_count=F("used_count") + 1
+        )
+
+        # ۳. پاک کردن تخفیف از روی سبد خرید فعال کاربر
+        # (برای اینکه تخفیف روی سبد جدیدش باقی نماند)
+        Cart.objects.filter(user=order.user).update(cart_discount=None)
+    # پس از بررسی کامل، موجودی را کم می‌کنیم.
+    for item in items:
+        if item.variant_id:
+            item.variant.quantity -= item.quantity
+            item.variant.save(update_fields=["quantity"])
+        else:
+            item.product.quantity -= item.quantity
+            item.product.save(update_fields=["quantity"])
+
+    order.status = Order.OrderStatus.PAID
+    order.save(update_fields=["status"])
+
+    return True, "پرداخت تأیید شد و موجودی کسر گردید."

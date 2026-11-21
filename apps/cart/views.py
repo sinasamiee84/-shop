@@ -1,17 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from decimal import Decimal
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.db.models import F
 from .forms import CheckoutForm
+from django.core.exceptions import ValidationError
+from django.views.decorators.http import require_GET
 
 from .models import CartItem, Order, OrderItem, Product, ProductVariant, Discount,Cart,ProductVariant
 from .services import (
     build_cart_summary,
     get_cart_for_request,
-    check_and_expire_abandoned_carts,
+    check_and_expire_abandoned_carts,validate_discount_for_user,calculate_shipping_cost
 )
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
@@ -57,17 +60,16 @@ def product_url_with_variant(product, variant_id=None):
 
 class AddToCartView(View):
     def post(self, request, product_id):
-        # بررسی سبدهای منقضی‌شده
         check_and_expire_abandoned_carts()
 
-        # دریافت محصول
-        product = get_object_or_404(Product, pk=product_id)
+        product = get_object_or_404(
+            Product,
+            pk=product_id,
+            is_active=True,
+        )
 
-        # دریافت شناسه واریانت
         variant_id = request.POST.get("variant_id")
 
-        # در صورت داشتن فیلد quantity، مقدار آن را می‌خوانیم
-        # در غیر این صورت، هر بار یک عدد اضافه می‌شود
         try:
             requested_quantity = int(
                 request.POST.get("quantity", "1")
@@ -75,67 +77,41 @@ class AddToCartView(View):
         except (TypeError, ValueError):
             requested_quantity = 1
 
-        if requested_quantity < 1:
-            requested_quantity = 1
+        requested_quantity = max(requested_quantity, 1)
 
-        # دریافت سبد خرید فعلی کاربر یا مهمان
         cart = get_cart_for_request(request)
 
         try:
             with transaction.atomic():
-                # قفل کردن رکورد سبد برای جلوگیری از ثبت همزمان
                 cart = Cart.objects.select_for_update().get(
                     pk=cart.pk
                 )
 
-                # قفل کردن محصول
                 product = Product.objects.select_for_update().get(
-                    pk=product_id
+                    pk=product_id,
+                    is_active=True,
                 )
 
                 variant = None
-
-                # اگر محصول واریانت دارد، همان واریانت را قفل می‌کنیم
                 if variant_id:
                     variant = get_object_or_404(
                         ProductVariant.objects.select_for_update(),
                         pk=variant_id,
                         product_id=product.id,
                     )
-
                     available_quantity = variant.quantity
-
                 else:
-                    # محصول ساده
                     available_quantity = product.quantity
 
-                # بررسی موجودی
+                # فقط هشدار می‌دهیم که موجودی انبار کافی نیست (اختیاری: اجازه می‌دهیم به سبد اضافه شود یا جلویش را بگیریم)
                 if available_quantity < requested_quantity:
-                    redirect_url = product_url_with_variant(
-                        product,
-                        variant_id
+                    messages.error(
+                        request,
+                        f"موجودی انبار محدود است. موجودی فعلی: {available_quantity} عدد",
                     )
+                    # اگر می‌خواهی اجازه ندهی اضافه شود، اینجا return کن
+                    # اما برای اینکه کاربر بتواند کالا را در سبد داشته باشد، معمولاً سخت‌گیری را می‌گذاریم برای پرداخت
 
-                    if variant:
-                        messages.error(
-                            request,
-                            (
-                                "موجودی این واریانت کافی نیست. "
-                                f"موجودی فعلی: {available_quantity} عدد"
-                            )
-                        )
-                    else:
-                        messages.error(
-                            request,
-                            (
-                                "موجودی محصول کافی نیست. "
-                                f"موجودی فعلی: {available_quantity} عدد"
-                            )
-                        )
-
-                    return redirect(redirect_url)
-
-                # پیدا کردن یا ساختن آیتم سبد
                 cart_item, created = (
                     CartItem.objects
                     .select_for_update()
@@ -144,75 +120,57 @@ class AddToCartView(View):
                         product=product,
                         variant=variant,
                         defaults={
-                            "quantity": 0
-                        }
+                            "quantity": 0,
+                        },
                     )
                 )
 
-                # کسر موجودی دقیقاً به اندازه تعداد درخواستی
-                if variant:
-                    variant.quantity -= requested_quantity
-                    variant.save(
-                        update_fields=["quantity"]
-                    )
-                else:
-                    product.quantity -= requested_quantity
-                    product.save(
-                        update_fields=["quantity"]
-                    )
-
-                # اضافه کردن تعداد به سبد
+                # **دیگر از انبار کم نمی‌کنیم!**
                 cart_item.quantity += requested_quantity
-                cart_item.save(
-                    update_fields=["quantity"]
-                )
+                cart_item.save(update_fields=["quantity"])
 
-                # به‌روزرسانی زمان آخرین فعالیت سبد
-                cart.save()
+                cart.save(update_fields=["updated_at"])
 
         except ProductVariant.DoesNotExist:
             messages.error(
                 request,
-                "واریانت انتخاب‌شده معتبر نیست."
+                "واریانت انتخاب‌شده معتبر نیست.",
             )
-
-            return redirect(
-                product.get_absolute_url()
-            )
-
-        # ساخت آدرس بازگشت همراه با واریانت انتخاب‌شده
-        redirect_url = product_url_with_variant(
-            product,
-            variant_id
-        )
+            return redirect(product.get_absolute_url())
 
         messages.success(
             request,
-            "محصول با موفقیت به سبد خرید اضافه شد."
+            "محصول با موفقیت به سبد خرید اضافه شد.",
         )
 
-        return redirect(redirect_url)
+        return redirect(
+            product_url_with_variant(
+                product,
+                variant_id,
+            )
+        )
 
 
 class CartView(View):
     template_name = "cart/cart.html"
 
     def get(self, request):
-        check_and_expire_abandoned_carts()
         cart = get_cart_for_request(request)
         summary = build_cart_summary(request, cart)
-        return render(request, self.template_name, {"cart": cart, **summary})
 
+        return render(
+            request,
+            self.template_name,
+            {
+                "cart": cart,
+                **summary,
+            },
+        )
 
 class UpdateCartItemView(View):
     def post(self, request, item_id):
         check_and_expire_abandoned_carts()
         cart = get_cart_for_request(request)
-        item = get_object_or_404(
-            CartItem.objects.select_related("product", "variant"),
-            pk=item_id,
-            cart=cart
-        )
 
         try:
             new_quantity = int(request.POST.get("quantity", "1"))
@@ -220,41 +178,30 @@ class UpdateCartItemView(View):
             messages.error(request, "تعداد واردشده معتبر نیست.")
             return redirect("cart:cart")
 
+        if new_quantity <= 0:
+            return redirect("cart:remove_item", item_id=item_id)
+
         with transaction.atomic():
-            diff = new_quantity - item.quantity
+            item = (
+                CartItem.objects
+                .select_for_update()
+                .filter(pk=item_id, cart=cart)
+                .first()
+            )
 
-            if diff > 0:  # تعداد افزایش یافته -> کسر مابه‌التفاوت از انبار
-                available = item.variant.quantity if item.variant else item.product.quantity
-                if available < diff:
-                    messages.error(request, "موجودی انبار برای این تعداد کافی نیست.")
-                    return redirect("cart:cart")
+            if item is None:
+                messages.warning(
+                    request,
+                    "این محصول دیگر در سبد خرید شما نیست."
+                )
+                return redirect("cart:cart")
 
-                if item.variant:
-                    item.variant.quantity -= diff
-                    item.variant.save(update_fields=["quantity"])
-                else:
-                    item.product.quantity -= diff
-                    item.product.save(update_fields=["quantity"])
-
-            elif diff < 0:  # تعداد کاهش یافته -> بازگرداندن مابه‌التفاوت به انبار
-                return_qty = abs(diff)
-                if item.variant:
-                    item.variant.quantity += return_qty
-                    item.variant.save(update_fields=["quantity"])
-                else:
-                    item.product.quantity += return_qty
-                    item.product.save(update_fields=["quantity"])
-
-            if new_quantity <= 0:
-                item.delete()
-                messages.success(request, "محصول از سبد خرید حذف شد.")
-            else:
-                item.quantity = new_quantity
-                item.save(update_fields=["quantity"])
-                messages.success(request, "سبد خرید به‌روزرسانی شد.")
+            item.quantity = new_quantity
+            item.save(update_fields=["quantity"])
 
             cart.save()
 
+        messages.success(request, "سبد خرید به‌روزرسانی شد.")
         return redirect("cart:cart")
 
 
@@ -262,23 +209,23 @@ class RemoveCartItemView(View):
     def post(self, request, item_id):
         check_and_expire_abandoned_carts()
         cart = get_cart_for_request(request)
-        item = get_object_or_404(
-            CartItem.objects.select_related("product", "variant"),
-            pk=item_id,
-            cart=cart
-        )
 
         with transaction.atomic():
-            # بازگرداندن کل موجودی این آیتم به انبار هنگام حذف از سبد
-            if item.variant:
-                item.variant.quantity += item.quantity
-                item.variant.save(update_fields=["quantity"])
-            else:
-                item.product.quantity += item.quantity
-                item.product.save(update_fields=["quantity"])
+            item = (
+                CartItem.objects
+                .select_for_update()
+                .filter(pk=item_id, cart=cart)
+                .first()
+            )
+
+            if item is None:
+                messages.warning(
+                    request,
+                    "این محصول دیگر در سبد خرید شما نیست."
+                )
+                return redirect("cart:cart")
 
             item.delete()
-            cart.save()
 
         messages.success(request, "محصول از سبد خرید حذف شد.")
         return redirect("cart:cart")
@@ -286,21 +233,109 @@ class RemoveCartItemView(View):
 
 class ApplyCartDiscountView(View):
     def post(self, request):
-        code = request.POST.get('discount_code', '').strip()
+        if not request.user.is_authenticated:
+            messages.info(
+                request,
+                "برای استفاده از کد تخفیف ابتدا وارد حساب کاربری خود شوید.",
+            )
+            return redirect("account:login")
+
+        code = request.POST.get("discount_code", "").strip()
+        cart = get_cart_for_request(request)
+
         if not code:
-            messages.error(request, 'لطفاً کد تخفیف را وارد کنید.')
-            return redirect('cart:cart')
+            cart.cart_discount = None
+            cart.save(update_fields=["cart_discount"])
+            messages.error(request, "لطفاً کد تخفیف را وارد کنید.")
+            return redirect("cart:cart")
 
-        discount = Discount.objects.filter(code=code, apply_type='cart').first()
-        if not discount or not is_discount_available(discount):
-            messages.error(request, 'کد تخفیف نامعتبر، منقضی شده یا به سقف مصرف رسیده است.')
-            return redirect('cart:cart')
+        discount = Discount.objects.filter(
+            code__iexact=code,
+            apply_type=Discount.ApplyType.CART,
+        ).first()
 
-        # ذخیره در سشن
-        request.session['cart_discount_id'] = discount.id
-        messages.success(request, 'کد تخفیف با موفقیت اعمال شد.')
-        return redirect('cart:cart')
+        if discount is None:
+            cart.cart_discount = None
+            cart.save(update_fields=["cart_discount"])
+            messages.error(request, "کد تخفیف نامعتبر است.")
+            return redirect("cart:cart")
 
+        try:
+            validate_discount_for_user(discount, request.user)
+        except ValidationError as exc:
+            Cart.objects.filter(
+                pk=cart.pk,
+                cart_discount_id=discount.pk,
+            ).update(cart_discount=None)
+
+            messages.error(request, " ".join(exc.messages))
+            return redirect("cart:cart")
+
+        if not is_discount_available(discount):
+            Cart.objects.filter(
+                pk=cart.pk,
+                cart_discount_id=discount.pk,
+            ).update(cart_discount=None)
+
+            messages.error(
+                request,
+                "کد تخفیف در حال حاضر قابل استفاده نیست یا به سقف مصرف رسیده است.",
+            )
+            return redirect("cart:cart")
+
+        summary = build_cart_summary(request, cart)
+
+        if not summary["lines"]:
+            messages.error(
+                request,
+                "برای استفاده از کد تخفیف، ابتدا محصولی به سبد خرید اضافه کنید.",
+            )
+            return redirect("cart:cart")
+
+        minimum = Decimal(str(discount.min_purchase_amount or 0))
+
+        if summary["total_after_product_discount"] < minimum:
+            messages.error(
+                request,
+                f"حداقل مبلغ خرید برای این کد {minimum:,.0f} تومان است.",
+            )
+            return redirect("cart:cart")
+
+        cart.cart_discount = discount
+        cart.save(update_fields=["cart_discount"])
+
+        messages.success(request, "کد تخفیف با موفقیت اعمال شد.")
+        return redirect("cart:cart")
+
+@require_GET
+def shipping_quote_view(request):
+    province = request.GET.get("province", "").strip()
+
+    if not province:
+        return JsonResponse(
+            {"error": "لطفاً استان را انتخاب کنید."},
+            status=400,
+        )
+
+    cart = get_cart_for_request(request)
+    summary = build_cart_summary(request, cart)
+
+    if not summary["lines"]:
+        return JsonResponse(
+            {"error": "سبد خرید شما خالی است."},
+            status=400,
+        )
+
+    shipping_cost = calculate_shipping_cost(province)
+
+    # final_price فعلی در پروژه شما مبلغ پس از تخفیف‌هاست،
+    # پس هزینه ارسال را فقط اینجا به آن اضافه می‌کنیم.
+    final_price = summary["final_price"] + shipping_cost
+
+    return JsonResponse({
+        "shipping_cost": int(shipping_cost),
+        "final_price": int(final_price),
+    })
 
 class CheckoutView(LoginRequiredMixin, View):
     template_name = "cart/checkout.html"
@@ -309,29 +344,34 @@ class CheckoutView(LoginRequiredMixin, View):
     def get(self, request):
         check_and_expire_abandoned_carts()
         cart = get_cart_for_request(request)
-        summary = build_cart_summary(request, cart)
+
+        form = CheckoutForm()
+        # مقدار پیش‌فرض اولیه بدون استان مشخص
+        summary = build_cart_summary(request, cart, province=None)
 
         if not summary["lines"]:
             messages.info(request, "سبد خرید شما خالی است.")
             return redirect("cart:cart")
 
-        form = CheckoutForm()
         return render(request, self.template_name, {
             "form": form,
             "cart": cart,
             **summary,
         })
-
     def post(self, request):
         check_and_expire_abandoned_carts()
         cart = get_cart_for_request(request)
-        summary = build_cart_summary(request, cart)
+
+        form = CheckoutForm(request.POST)
+        province = form.cleaned_data.get("province") if form.is_valid() else None
+
+        # محاسبه خلاصه با در نظر گرفتن استان انتخابی کاربر
+        summary = build_cart_summary(request, cart, province=province)
 
         if not summary["lines"]:
             messages.info(request, "سبد خرید شما خالی است.")
             return redirect("cart:cart")
 
-        form = CheckoutForm(request.POST)
         if not form.is_valid():
             return render(request, self.template_name, {
                 "form": form,
@@ -341,39 +381,40 @@ class CheckoutView(LoginRequiredMixin, View):
 
         with transaction.atomic():
             cart_items = list(
-                CartItem.objects.select_for_update()
-                .filter(cart=cart)
-                .select_related("product", "variant")
+                CartItem.objects.select_for_update().filter(cart=cart).select_related("product", "variant")
             )
 
             if not cart_items:
                 messages.info(request, "سبد خرید شما خالی است.")
                 return redirect("cart:cart")
 
-            summary = build_cart_summary(request, cart)
+            # محاسبه قطعی نهایی داخل تراکنش با استان معتبر فرم
+            province = form.cleaned_data["province"]
+            summary = build_cart_summary(request, cart, province=province)
 
             order = Order.objects.create(
                 user=request.user,
                 full_name=form.cleaned_data["full_name"],
                 phone=form.cleaned_data["phone"],
+                address=f"استان: {province} - {form.cleaned_data['address']}",
                 postal_code=form.cleaned_data["postal_code"],
-                address=form.cleaned_data["address"],
                 total_price=summary["subtotal"],
+                shipping_cost=summary["shipping_cost"],         # ذخیره صحیح هزینه ارسال
                 product_discount_amount=summary["product_discount_total"],
                 cart_discount_amount=summary["cart_discount_amount"],
-                final_price=summary["final_price"],
-                status="pending",
+                final_price=summary["final_price"],             # شامل مجموع کالاها + ارسال
+                cart_discount=summary["cart_discount"],
+                status=Order.OrderStatus.PENDING,
             )
 
+            # ایجاد آیتم‌های سفارش
             for line in summary["lines"]:
                 OrderItem.objects.create(
                     order=order,
                     variant=line["variant"],
                     product=line["product"],
                     product_title=str(line["product"]),
-                    variant_title=(
-                        str(line["variant"]) if line["variant"] else ""
-                    ),
+                    variant_title=(str(line["variant"]) if line["variant"] else ""),
                     unit_price=line["unit_price"],
                     quantity=line["quantity"],
                     total_price=line["line_total"],
@@ -381,17 +422,13 @@ class CheckoutView(LoginRequiredMixin, View):
                 )
 
             if summary["used_product_discount_ids"]:
-                Discount.objects.filter(
-                    pk__in=summary["used_product_discount_ids"]
-                ).update(used_count=F("used_count") + 1)
+                Discount.objects.filter(pk__in=summary["used_product_discount_ids"]).update(
+                    used_count=F("used_count") + 1)
 
             if summary["cart_discount"]:
-                Discount.objects.filter(
-                    pk=summary["cart_discount"].pk
-                ).update(used_count=F("used_count") + 1)
+                Discount.objects.filter(pk=summary["cart_discount"].pk).update(used_count=F("used_count") + 1)
                 request.session.pop("cart_discount_id", None)
 
-            # موجودی قبلاً هنگام افزودن به سبد کم شده؛ اینجا دوباره کم نمی‌شود.
             CartItem.objects.filter(cart=cart).delete()
 
         messages.success(request, "سفارش شما با موفقیت ثبت شد.")
@@ -405,7 +442,22 @@ class OrderListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         check_and_expire_abandoned_carts()
-        return Order.objects.filter(user=self.request.user).order_by("-created_at")
+
+        orders = list(
+            Order.objects
+            .filter(user=self.request.user)
+            .order_by("-created_at", "-pk")
+        )
+
+        # لیست از جدیدترین به قدیمی‌ترین است؛
+        # پس شماره قدیمی‌ترین سفارش ۱ و جدیدترین سفارش بزرگ‌ترین عدد می‌شود.
+        total_orders = len(orders)
+
+        for index, order in enumerate(orders):
+            order.display_number = total_orders - index
+
+        return orders
+
 
 
 class OrderDetailView(LoginRequiredMixin, DetailView):

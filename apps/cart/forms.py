@@ -2,6 +2,17 @@ from django import forms
 
 
 class CheckoutForm(forms.Form):
+
+    PROVINCE_CHOICES = [
+        ('', 'انتخاب استان...'),
+        ('تهران', 'تهران'),
+        ('البرز', 'البرز'),
+        ('اصفهان', 'اصفهان'),
+        ('خراسان رضوی', 'خراسان رضوی'),
+        ('فارس', 'فارس'),
+        ('آذربایجان شرقی', 'آذربایجان شرقی'),
+        ('سایر استان‌ها', 'سایر استان‌ها'),
+    ]
     full_name = forms.CharField(
         label="نام و نام خانوادگی گیرنده",
         max_length=150,
@@ -23,7 +34,7 @@ class CheckoutForm(forms.Form):
             "placeholder": "مثلاً 09123456789",
         }),
     )
-
+    province = forms.ChoiceField(choices=PROVINCE_CHOICES, label="استان مقصد")
     postal_code = forms.CharField(
         label="کد پستی",
         max_length=10,

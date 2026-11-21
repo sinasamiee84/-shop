@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from apps.cart.models import Order
 from .models import Payment
-from .services import get_zarinpal_config, zarinpal_request, zarinpal_verify
+from .services import get_zarinpal_config, zarinpal_request, zarinpal_verify , verify_payment_and_complete_order
 
 
 @login_required
@@ -68,7 +68,7 @@ def verify_payment(request):
         authority=authority,
     )
 
-    # جلوگیری از پردازش دوباره callback برای پرداخت موفق
+    # جلوگیری از پردازش دوبارهٔ callback پرداخت موفق
     if payment.status == Payment.Status.SUCCESS:
         return render(
             request,
@@ -103,6 +103,28 @@ def verify_payment(request):
             },
         )
 
+    # زرین‌پال پرداخت را تأیید کرده است.
+    # حالا موجودی کسر و سفارش paid می‌شود.
+    order_success, order_message = verify_payment_and_complete_order(
+        payment.order_id
+    )
+
+    if not order_success:
+        # پول نزد درگاه تأیید شده، ولی تکمیل سفارش ممکن نشده است.
+        # این وضعیت را نباید به‌اشتباه SUCCESS یا paid ثبت کنیم.
+        payment.gateway_message = order_message
+        payment.ref_id = str(ref_id) if ref_id else ""
+        payment.save(update_fields=["gateway_message", "ref_id"])
+
+        return render(
+            request,
+            "payment/payment_failed.html",
+            {
+                "payment": payment,
+                "error_msg": order_message,
+            },
+        )
+
     payment.status = Payment.Status.SUCCESS
     payment.ref_id = str(ref_id) if ref_id else ""
     payment.paid_at = timezone.now()
@@ -116,12 +138,9 @@ def verify_payment(request):
         ]
     )
 
-    order = payment.order
-    order.status = Order.OrderStatus.PAID
-    order.save(update_fields=["status"])
-
     return render(
         request,
         "payment/payment_success.html",
         {"payment": payment},
     )
+

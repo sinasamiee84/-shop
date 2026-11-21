@@ -36,6 +36,14 @@ class Discount(models.Model):
   value = models.DecimalField(
       max_digits=12, decimal_places=0, verbose_name='مقدار تخفیف'
   )
+  max_discount_amount = models.DecimalField(
+      max_digits=12,
+      decimal_places=0,
+      null=True,
+      blank=True,
+      verbose_name='سقف مبلغ تخفیف',
+      help_text='اختیاری؛ فقط برای تخفیف درصدی استفاده می‌شود.',
+  )
 
   # اگر تخفیف برای محصولات خاصی باشد (می‌تواند خالی باشد یعنی روی همه محصولات آن دسته اعمال شود یا فقط محصولات انتخابی)
   products = models.ManyToManyField(
@@ -78,6 +86,42 @@ class Discount(models.Model):
   def __str__(self):
     return f'{self.title} ({self.code})'
 
+class UserDiscountUsage(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="discount_usages",
+        verbose_name="کاربر",
+    )
+    discount = models.ForeignKey(
+        Discount,
+        on_delete=models.CASCADE,
+        related_name="usages",
+        verbose_name="کد تخفیف",
+    )
+    order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="discount_usages",
+        verbose_name="سفارش",
+    )
+    used_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ استفاده")
+
+    class Meta:
+        verbose_name = "استفاده از کد تخفیف"
+        verbose_name_plural = "تاریخچه استفاده از کدهای تخفیف"
+        # مهم: هر کاربر فقط یک‌بار می‌تواند برای هر کد این رکورد را داشته باشد
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "discount"],
+                name="unique_user_discount_usage"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.discount.code}"
 
 class Cart(models.Model):
   user = models.ForeignKey(
@@ -170,6 +214,7 @@ class Order(models.Model):
       default=0,
       verbose_name='مجموع تخفیف محصولات',
   )
+  shipping_cost = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name="هزینه ارسال")
   cart_discount_amount = models.DecimalField(
       max_digits=12,
       decimal_places=0,
@@ -185,7 +230,13 @@ class Order(models.Model):
   phone = models.CharField(max_length=15, verbose_name='شماره تماس')
   address = models.TextField(verbose_name='آدرس پستی')
   postal_code = models.CharField(max_length=20, verbose_name='کد پستی')
-
+  cart_discount = models.ForeignKey(
+      Discount,
+      on_delete=models.SET_NULL,
+      null=True,
+      blank=True,
+      verbose_name="تخفیف اعمال‌شده روی سفارش",
+  )
   created_at = models.DateTimeField(
       auto_now_add=True, verbose_name='تاریخ ثبت سفارش'
   )

@@ -4,26 +4,28 @@
 {% block title %}تسویه‌حساب و تکمیل آدرس{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- هدر صفحه -->
+<div class="container py-5" dir="rtl">
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="fw-bold text-dark">
-                <i class="bi bi-truck me-2 text-success"></i> اطلاعات ارسال و پرداخت
+                <i class="bi bi-truck me-2 text-success"></i>
+                اطلاعات ارسال و پرداخت
             </h2>
-            <p class="text-muted">لطفاً مشخصات خود را جهت ارسال سفارش با دقت وارد کنید.</p>
+            <p class="text-muted mb-0">
+                لطفاً اطلاعات ارسال را وارد کنید. هزینه ارسال پس از انتخاب استان نمایش داده می‌شود.
+            </p>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- ستون فرم اطلاعات ارسال -->
+        <!-- فرم -->
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                 <form method="post" novalidate>
                     {% csrf_token %}
 
                     {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger rounded-3 mb-4">
                             {% for error in form.non_field_errors %}
                                 <div>{{ error }}</div>
                             {% endfor %}
@@ -34,25 +36,23 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary" for="{{ field.id_for_label }}">
                                 {{ field.label }}
-                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
                             </label>
 
-                            <!-- تزریق کلاس form-control بوت‌استرپ به فیلدها -->
-                            {% if field.field.widget.input_type == 'select' %}
-                                {{ field }} <!-- اگر فیلد select بود -->
-                            {% elif field.field.widget.input_type == 'textarea' %}
-                                {{ field }} <!-- اگر textarea بود -->
-                            {% else %}
-                                {{ field }}
-                            {% endif %}
+                            {{ field }}
 
                             {% if field.help_text %}
-                                <div class="form-text text-muted small">{{ field.help_text }}</div>
+                                <div class="form-text text-muted small">
+                                    {{ field.help_text }}
+                                </div>
                             {% endif %}
 
                             {% for error in field.errors %}
                                 <div class="invalid-feedback d-block small mt-1">
-                                    <i class="bi bi-exclamation-circle me-1"></i> {{ error }}
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ error }}
                                 </div>
                             {% endfor %}
                         </div>
@@ -65,27 +65,46 @@
             </div>
         </div>
 
-        <!-- ستون خلاصه سفارش -->
+        <!-- خلاصه سفارش -->
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
-                <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">خلاصه سفارش شما</h4>
+                <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">
+                    خلاصه سفارش شما
+                </h4>
 
-                <div class="order-items-list mb-3" style="max-height: 300px; overflow-y: auto;">
+                <div class="order-items-list mb-3" style="max-height: 280px; overflow-y: auto;">
                     {% for line in lines %}
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                            <div>
-                                <h6 class="mb-0 fw-semibold text-dark">{{ line.product.title }}</h6>
+                            <div class="ms-3">
+                                <h6 class="mb-1 fw-semibold text-dark">
+                                    {{ line.product.title }}
+                                </h6>
+
                                 {% if line.variant %}
-                                    <small class="text-muted">{{ line.variant }}</small>
+                                    <small class="text-muted d-block">
+                                        {{ line.variant }}
+                                    </small>
                                 {% endif %}
-                                <span class="badge bg-secondary text-white ms-1">× {{ line.quantity }}</span>
+
+                                <span class="badge bg-secondary text-white mt-1">
+                                    تعداد: {{ line.quantity }}
+                                </span>
                             </div>
-                            <span class="fw-semibold text-secondary">{{ line.line_total|intcomma }} تومان</span>
+
+                            <span class="fw-semibold text-secondary text-nowrap">
+                                {{ line.line_total|intcomma }} تومان
+                            </span>
                         </div>
                     {% endfor %}
                 </div>
 
-                <!-- محاسبه تخفیف‌ها در صورت وجود -->
+                <div class="d-flex justify-content-between py-2 text-secondary small">
+                    <span>مجموع خرید:</span>
+                    <span class="fw-semibold">
+                        {{ subtotal|intcomma }} تومان
+                    </span>
+                </div>
+
                 {% if product_discount_total > 0 %}
                     <div class="d-flex justify-content-between py-2 text-success small">
                         <span>تخفیف محصولات:</span>
@@ -100,15 +119,36 @@
                     </div>
                 {% endif %}
 
+                <div class="d-flex justify-content-between align-items-center py-2 text-secondary small">
+                    <span>
+                        <i class="bi bi-truck ms-1"></i>
+                        هزینه ارسال:
+                    </span>
+
+                    <span id="shipping-cost" class="fw-semibold">
+                        {% if shipping_cost and shipping_cost > 0 %}
+                            {{ shipping_cost|intcomma }} تومان
+                        {% else %}
+                            استان را انتخاب کنید
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div id="shipping-message" class="small text-muted mt-1 d-none"></div>
+
                 <hr class="my-3">
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fs-5 fw-bold text-dark">مبلغ قابل پرداخت:</span>
-                    <span class="fs-4 fw-extrabold text-success">{{ final_price|intcomma }} تومان</span>
+
+                    <span id="final-price" class="fs-4 fw-bold text-success">
+                        {{ final_price|intcomma }} تومان
+                    </span>
                 </div>
 
                 <div class="alert alert-warning small mb-0 rounded-3" role="alert">
-                    <i class="bi bi-info-circle-fill me-1"></i> پس از ثبت نهایی، سفارش شما به مدت ۲۴ ساعت رزرو خواهد شد.
+                    <i class="bi bi-info-circle-fill ms-1"></i>
+                    پس از ثبت نهایی، سفارش شما به مدت ۲۴ ساعت رزرو خواهد شد.
                 </div>
             </div>
         </div>
@@ -116,29 +156,96 @@
 </div>
 
 <style>
-    /* استایل‌دهی تمیز برای اینپوت‌های جنگو جهت گرفتن کلاس form-control بوت‌استرپ */
-    input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="tel"], textarea, select {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    textarea,
+    select {
         display: block;
         width: 100%;
         padding: 0.75rem 1rem;
         font-size: 1rem;
-        font-weight: 400;
         line-height: 1.5;
         color: #212529;
         background-color: #f8f9fa;
-        background-clip: padding-box;
         border: 1px solid #dee2e6;
-        appearance: none;
         border-radius: 0.5rem;
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
 
-    input:focus, textarea:focus, select:focus {
+    input:focus,
+    textarea:focus,
+    select:focus {
         color: #212529;
         background-color: #fff;
         border-color: #198754;
         outline: 0;
-        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.20);
     }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const provinceField = document.getElementById("id_province");
+    const shippingCostElement = document.getElementById("shipping-cost");
+    const finalPriceElement = document.getElementById("final-price");
+    const shippingMessageElement = document.getElementById("shipping-message");
+
+    function formatToman(amount) {
+        return new Intl.NumberFormat("fa-IR").format(amount) + " تومان";
+    }
+
+    async function updateShippingQuote() {
+        const province = provinceField.value;
+
+        if (!province) {
+            shippingCostElement.textContent = "استان را انتخاب کنید";
+            shippingMessageElement.classList.add("d-none");
+            return;
+        }
+
+        shippingCostElement.innerHTML = `
+            <span class="spinner-border spinner-border-sm text-success" role="status"></span>
+            در حال محاسبه
+        `;
+
+        shippingMessageElement.classList.add("d-none");
+
+        try {
+            const url = "{% url 'cart:shipping_quote' %}?province=" + encodeURIComponent(province);
+
+            const response = await fetch(url, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "خطا در محاسبه هزینه ارسال");
+            }
+
+            shippingCostElement.textContent = formatToman(data.shipping_cost);
+            finalPriceElement.textContent = formatToman(data.final_price);
+        } catch (error) {
+            shippingCostElement.textContent = "نامشخص";
+
+            shippingMessageElement.textContent = error.message;
+            shippingMessageElement.classList.remove("d-none");
+        }
+    }
+
+    if (provinceField) {
+        provinceField.addEventListener("change", updateShippingQuote);
+
+        // اگر فرم با استان انتخاب‌شده دوباره رندر شد، مبلغ را فوراً محاسبه کن.
+        if (provinceField.value) {
+            updateShippingQuote();
+        }
+    }
+});
+</script>
 {% endblock %}

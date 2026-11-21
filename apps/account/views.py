@@ -16,6 +16,7 @@ from .forms import (
     SetNewPasswordForm,
     VerifyOtpForm,
 )
+from apps.cart.models import Cart, CartItem
 from .models import CustomUser, OtpCode
 from .services import ActiveOtpExists, OtpSendError, create_otp, verify_otp_code
 from apps.cart.services import merge_session_cart_to_user_cart
@@ -139,6 +140,7 @@ class RegisterView(CreateView):
 
 
 # ورود به حساب
+
 class LoginView(FormView):
     form_class = LoginForm
     template_name = "account/login.html"
@@ -146,6 +148,7 @@ class LoginView(FormView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("home")
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -155,21 +158,46 @@ class LoginView(FormView):
 
     def form_valid(self, form):
         user = form.get_user()
+
+        # ذخیره session key مهمان قبل از login
+        guest_session_key = self.request.session.session_key
+
+        # بررسی داشتن آیتم در سبد مهمان، قبل از merge
+        guest_has_cart_items = False
+
+        if guest_session_key:
+            guest_has_cart_items = CartItem.objects.filter(
+                cart__user__isnull=True,
+                cart__session_key=guest_session_key,
+            ).exists()
+
+        # انتقال سبد مهمان به سبد کاربر
+        merge_session_cart_to_user_cart(
+            user=user,
+            session_key=guest_session_key,
+        )
+
+        # ورود کاربر
         login(self.request, user)
 
-        # **انتقال و حفظ سبد خرید مهمان به کاربر لاگین‌کرده**
-        merge_session_cart_to_user_cart(self.request, user)
+        # اگر مهمان سبد خرید داشته، بعد از ورود به صفحه سبد برود
+        if guest_has_cart_items:
+            return redirect("cart:cart")
 
-        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        # در حالت عادی next را بررسی کن
+        next_url = (
+            self.request.POST.get("next")
+            or self.request.GET.get("next")
+        )
+
         if next_url and url_has_allowed_host_and_scheme(
-                next_url,
-                allowed_hosts={self.request.get_host()},
-                require_https=self.request.is_secure(),
+            next_url,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
         ):
             return redirect(next_url)
+
         return redirect("home")
-
-
 # خروج از حساب
 class LogoutView(View):
     def post(self, request):
