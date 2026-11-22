@@ -63,11 +63,13 @@ INSTALLED_APPS = [
 
     "crispy_forms",
     "crispy_bootstrap5",
+    "django_ckeditor_5",
 
     'apps.account',
     'apps.products',
     'apps.cart',
     'apps.payment',
+    'apps.blogs',
 ]
 
 MIDDLEWARE = [
@@ -163,8 +165,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+#UnFold
 
-#Un-fold
 
 UNFOLD = {
     "SITE_TITLE": "طب‌شاپ | مدیریت فروشگاه",
@@ -199,6 +201,27 @@ UNFOLD = {
                         "title": "تصاویر محصولات",
                         "icon": "imagesmode",
                         "link": "/admin/products/productimage/",
+                    },
+                ],
+            },
+            {
+                "title": "بلاگ و مقالات",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "مقاله‌ها",
+                        "icon": "article",
+                        "link": "/admin/blogs/blogpost/",
+                    },
+                    {
+                        "title": "دسته‌بندی‌های بلاگ",
+                        "icon": "folder",
+                        "link": "/admin/blogs/category/",
+                    },
+                    {
+                        "title": "برچسب‌ها",
+                        "icon": "label",
+                        "link": "/admin/blogs/tag/",
                     },
                 ],
             },
@@ -263,6 +286,81 @@ UNFOLD = {
         ],
     },
 }
+
+
+
+#CKEditor
+
+# تنظیمات ckeditor-5
+CKEDITOR_5_CONFIGS = {
+    "default": {
+        "toolbar": [
+            "heading",
+            "|",
+            "bold",
+            "italic",
+            "underline",
+            "strikethrough",
+            "code",
+            "subscript",
+            "superscript",
+            "|",
+            "link",
+            "bulletedList",
+            "numberedList",
+            "todoList",
+            "blockQuote",
+            "insertTable",
+            "imageUpload",
+            "horizontalLine",
+            "|",
+            "removeFormat",
+            "undo",
+            "redo",
+        ],
+        "image": {
+            "toolbar": [
+                "imageTextAlternative",
+                "toggleImageCaption",
+                "|",
+                "imageStyle:alignLeft",
+                "imageStyle:alignCenter",
+                "imageStyle:alignRight",
+                "imageStyle:block",
+                "imageStyle:side",
+            ],
+            "styles": [
+                "full",
+                "side",
+                "alignLeft",
+                "alignCenter",
+                "alignRight",
+            ],
+        },
+        "table": {
+            "contentToolbar": [
+                "tableColumn",
+                "tableRow",
+                "mergeTableCells",
+                "tableProperties",
+                "tableCellProperties",
+            ]
+        },
+        "heading": {
+            "options": [
+                { "model": "paragraph", "title": "پاراگراف", "class": "ck-heading_paragraph" },
+                { "model": "heading2", "view": "h2", "title": "سرتیتر ۲", "class": "ck-heading_heading2" },
+                { "model": "heading3", "view": "h3", "title": "سرتیتر ۳", "class": "ck-heading_heading3" },
+                { "model": "heading4", "view": "h4", "title": "سرتیتر ۴", "class": "ck-heading_heading4" },
+            ]
+        }
+    },
+}
+
+# دسترسی آپلود عکس (فقط کاربران مدیر)
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = "staff"
+CKEDITOR_5_CUSTOM_CSS = 'css/blog_content.css'
+
 
 
 #zarinpal

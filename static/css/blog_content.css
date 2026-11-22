@@ -1,0 +1,568 @@
+/* =========================================================
+   Blog Content Design System
+   Used in:
+   - Public blog page: .blog-content
+   - CKEditor admin editor: .ck-content
+   ========================================================= */
+
+:root {
+    --blog-green: #157347;
+    --blog-green-dark: #0f5132;
+    --blog-green-soft: #eaf7ef;
+    --blog-green-border: #b7e4c7;
+
+    --blog-text: #263238;
+    --blog-muted: #6c757d;
+    --blog-border: #e7ece9;
+    --blog-surface: #ffffff;
+    --blog-surface-soft: #f8faf9;
+
+    --blog-radius-sm: 0.65rem;
+    --blog-radius-md: 1rem;
+    --blog-radius-lg: 1.35rem;
+
+    --blog-shadow-soft:
+        0 0.5rem 1.5rem rgba(24, 61, 43, 0.07);
+
+    --blog-shadow-image:
+        0 0.75rem 2rem rgba(24, 61, 43, 0.13);
+}
+
+/* محتوای اصلی مقاله و محتوای داخل CKEditor */
+
+.blog-content,
+.ck-content {
+    direction: rtl;
+    text-align: right;
+    color: var(--blog-text);
+    font-size: 1.08rem;
+    line-height: 2.15;
+    overflow-wrap: anywhere;
+}
+
+/* فاصله مناسب میان عناصر */
+
+.blog-content > *:first-child,
+.ck-content > *:first-child {
+    margin-top: 0;
+}
+
+.blog-content > *:last-child,
+.ck-content > *:last-child {
+    margin-bottom: 0;
+}
+
+/* پاراگراف‌ها */
+
+.blog-content p,
+.ck-content p {
+    margin: 0 0 1.35rem;
+    color: #37474f;
+}
+
+/* لینک‌ها */
+
+.blog-content a,
+.ck-content a {
+    color: var(--blog-green);
+    font-weight: 700;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition:
+        color 0.2s ease,
+        text-decoration-thickness 0.2s ease;
+}
+
+.blog-content a:hover,
+.ck-content a:hover {
+    color: var(--blog-green-dark);
+    text-decoration-thickness: 2px;
+}
+
+/* تیترها */
+
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.ck-content h2,
+.ck-content h3,
+.ck-content h4 {
+    position: relative;
+    color: var(--blog-green-dark);
+    font-weight: 800;
+    line-height: 1.75;
+    letter-spacing: 0;
+}
+
+.blog-content h2,
+.ck-content h2 {
+    margin: 3rem 0 1.25rem;
+    padding: 0.8rem 1rem 0.8rem 0;
+    border-right: 5px solid var(--blog-green);
+    background: linear-gradient(
+        to left,
+        var(--blog-green-soft),
+        transparent
+    );
+    border-radius: 0 var(--blog-radius-sm) var(--blog-radius-sm) 0;
+    font-size: 1.55rem;
+}
+
+.blog-content h3,
+.ck-content h3 {
+    margin: 2.4rem 0 1rem;
+    font-size: 1.3rem;
+}
+
+.blog-content h4,
+.ck-content h4 {
+    margin: 2rem 0 0.85rem;
+    color: #2f6f4e;
+    font-size: 1.12rem;
+}
+
+/* خط جداکننده */
+
+.blog-content hr,
+.ck-content hr {
+    height: 1px;
+    margin: 2.5rem 0;
+    border: 0;
+    background: linear-gradient(
+        to left,
+        transparent,
+        var(--blog-green-border),
+        transparent
+    );
+}
+
+/* لیست‌ها */
+
+.blog-content ul,
+.blog-content ol,
+.ck-content ul,
+.ck-content ol {
+    margin: 1.25rem 0 1.6rem;
+    padding-right: 1.8rem;
+}
+
+.blog-content ul,
+.ck-content ul {
+    list-style: none;
+}
+
+.blog-content ul li,
+.ck-content ul li {
+    position: relative;
+    padding-right: 0.75rem;
+}
+
+.blog-content ul li::before,
+.ck-content ul li::before {
+    position: absolute;
+    right: -1.15rem;
+    top: 0.9rem;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background-color: var(--blog-green);
+    content: "";
+}
+
+.blog-content li,
+.ck-content li {
+    margin-bottom: 0.65rem;
+    color: #455a64;
+}
+
+/* نقل‌قول */
+
+.blog-content blockquote,
+.ck-content blockquote {
+    position: relative;
+    margin: 2rem 0;
+    padding: 1.4rem 1.5rem 1.4rem 1.5rem;
+    border: 1px solid var(--blog-green-border);
+    border-right: 5px solid var(--blog-green);
+    border-radius: 0 var(--blog-radius-md) var(--blog-radius-md) 0;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(234, 247, 239, 0.95),
+            rgba(248, 250, 249, 0.85)
+        );
+    color: #40534a;
+    box-shadow: var(--blog-shadow-soft);
+}
+
+.blog-content blockquote::before,
+.ck-content blockquote::before {
+    position: absolute;
+    top: 0.35rem;
+    left: 1rem;
+    color: rgba(21, 115, 71, 0.18);
+    content: "“";
+    font-family: Georgia, serif;
+    font-size: 4rem;
+    line-height: 1;
+}
+
+/* تصاویر عمومی */
+
+.blog-content img,
+.ck-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--blog-radius-md);
+}
+
+.blog-content figure.image,
+.ck-content figure.image {
+    position: relative;
+    max-width: 100%;
+    margin: 2.25rem auto;
+    text-align: center;
+}
+
+.blog-content figure.image img,
+.ck-content figure.image img {
+    display: block;
+    margin: 0 auto;
+    box-shadow: var(--blog-shadow-image);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.blog-content figure.image img:hover,
+.ck-content figure.image img:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 1rem 2.5rem rgba(24, 61, 43, 0.17);
+}
+
+/* تصویر تمام‌عرض */
+
+.blog-content figure.image.image-style-block,
+.ck-content figure.image.image-style-block {
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* تصویر وسط */
+
+.blog-content figure.image.image-style-align-center,
+.ck-content figure.image.image-style-align-center {
+    float: none;
+    width: fit-content;
+    max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+}
+
+/* تصویر سمت چپ */
+
+.blog-content figure.image.image-style-align-left,
+.ck-content figure.image.image-style-align-left {
+    float: left;
+    width: 43%;
+    margin: 0.5rem 1.75rem 1rem 0;
+    text-align: center;
+}
+
+/* تصویر سمت راست */
+
+.blog-content figure.image.image-style-align-right,
+.ck-content figure.image.image-style-align-right {
+    float: right;
+    width: 43%;
+    margin: 0.5rem 0 1rem 1.75rem;
+    text-align: center;
+}
+
+/* کپشن تصویر */
+
+.blog-content figcaption,
+.ck-content figcaption {
+    margin-top: 0.75rem;
+    color: var(--blog-muted);
+    font-size: 0.88rem;
+    line-height: 1.8;
+    text-align: center;
+}
+
+/* جلوگیری از خراب شدن ادامه متن کنار تصاویر شناور */
+
+.blog-content::after,
+.ck-content::after {
+    display: block;
+    clear: both;
+    content: "";
+}
+
+/* جدول */
+
+.blog-content figure.table,
+.ck-content figure.table {
+    width: 100%;
+    margin: 2rem 0;
+    overflow-x: auto;
+    border: 1px solid var(--blog-border);
+    border-radius: var(--blog-radius-md);
+    box-shadow: var(--blog-shadow-soft);
+}
+
+.blog-content table,
+.ck-content table {
+    width: 100%;
+    min-width: 520px;
+    margin: 0;
+    border-collapse: collapse;
+    background: var(--blog-surface);
+}
+
+.blog-content th,
+.blog-content td,
+.ck-content th,
+.ck-content td {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--blog-border);
+    text-align: right;
+    vertical-align: middle;
+}
+
+.blog-content th,
+.ck-content th {
+    background-color: var(--blog-green-soft);
+    color: var(--blog-green-dark);
+    font-weight: 800;
+}
+
+.blog-content tr:nth-child(even) td,
+.ck-content tr:nth-child(even) td {
+    background-color: var(--blog-surface-soft);
+}
+
+/* کد */
+
+.blog-content code,
+.ck-content code {
+    padding: 0.15rem 0.4rem;
+    border: 1px solid #d9e8de;
+    border-radius: 0.35rem;
+    background-color: var(--blog-green-soft);
+    color: var(--blog-green-dark);
+    direction: ltr;
+    font-size: 0.9em;
+}
+
+.blog-content pre,
+.ck-content pre {
+    margin: 1.75rem 0;
+    padding: 1.2rem 1.35rem;
+    overflow-x: auto;
+    border: 1px solid #344e41;
+    border-radius: var(--blog-radius-md);
+    background: #1f2d27;
+    color: #e9f5ee;
+    direction: ltr;
+    text-align: left;
+    line-height: 1.8;
+    box-shadow: var(--blog-shadow-soft);
+}
+
+.blog-content pre code,
+.ck-content pre code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+}
+
+/* ویدیو و iframe */
+
+.blog-content iframe,
+.ck-content iframe {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 360px;
+    margin: 2rem auto;
+    border: 0;
+    border-radius: var(--blog-radius-md);
+    box-shadow: var(--blog-shadow-soft);
+}
+
+/* تنظیمات محیط ادیتور */
+
+.ck-editor__editable_inline {
+    min-height: 520px;
+    padding: 1.5rem 1.75rem !important;
+    border-color: var(--blog-border) !important;
+    background-color: var(--blog-surface) !important;
+}
+
+.ck-editor__editable_inline.ck-focused {
+    border-color: var(--blog-green) !important;
+    box-shadow: 0 0 0 0.2rem rgba(21, 115, 71, 0.12) !important;
+}
+
+/* موبایل */
+
+@media (max-width: 768px) {
+    .blog-content,
+    .ck-content {
+        font-size: 1rem;
+        line-height: 2;
+    }
+
+    .blog-content h2,
+    .ck-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .blog-content h3,
+    .ck-content h3 {
+        font-size: 1.15rem;
+    }
+
+    .blog-content figure.image.image-style-align-left,
+    .blog-content figure.image.image-style-align-right,
+    .ck-content figure.image.image-style-align-left,
+    .ck-content figure.image.image-style-align-right {
+        float: none;
+        width: 100% !important;
+        margin: 1.75rem auto;
+    }
+
+    .blog-content iframe,
+    .ck-content iframe {
+        min-height: 230px;
+    }
+
+    .ck-editor__editable_inline {
+        min-height: 420px;
+        padding: 1rem !important;
+    }
+}
+.blog-detail-page {
+    direction: rtl;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+.blog-article {
+    overflow: hidden;
+    border: 1px solid #e9efeb;
+    border-radius: 1.5rem;
+    background: #ffffff;
+    box-shadow:
+        0 0.75rem 2rem rgba(24, 61, 43, 0.06),
+        0 0.15rem 0.4rem rgba(24, 61, 43, 0.04);
+}
+
+.blog-cover {
+    display: block;
+    width: 100%;
+    max-height: 540px;
+    object-fit: cover;
+}
+
+.blog-article .card-body {
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #ffffff 92%,
+            #fbfdfb 100%
+        );
+}
+
+.blog-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.blog-title {
+    max-width: 900px;
+    margin-bottom: 1.5rem;
+    color: #172b21;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: 1.65;
+}
+
+.blog-excerpt {
+    position: relative;
+    margin: 0 0 2rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid #cce8d5;
+    border-right: 5px solid #198754;
+    border-radius: 0 1rem 1rem 0;
+    background: #f1faf4;
+    color: #365345;
+    line-height: 2;
+}
+
+.blog-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #edf1ee;
+}
+
+.blog-tag {
+    padding: 0.45rem 0.85rem;
+    border: 1px solid #cce8d5;
+    border-radius: 999px;
+    background: #f4fbf6;
+    color: #157347;
+    font-size: 0.85rem;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.blog-tag:hover {
+    background-color: #e4f5e9;
+    transform: translateY(-1px);
+}
+
+.blog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.blog-actions .btn {
+    min-height: 44px;
+    border-radius: 0.75rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .blog-detail-page {
+        padding-top: 1rem;
+    }
+
+    .blog-article {
+        border-radius: 1rem;
+    }
+
+    .blog-article .card-body {
+        padding: 1.25rem !important;
+    }
+
+    .blog-title {
+        font-size: 1.7rem;
+    }
+}

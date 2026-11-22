@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ blog_post.meta_title|default:blog_post.title }}
+{% endblock %}
+
+{% block meta_description %}
+    {{ blog_post.meta_description|default:blog_post.excerpt }}
+{% endblock %}
+
+{% block content %}
+
+{# همان فایل CSS که CKEditor در پنل مدیریت نیز استفاده می‌کند #}
+<link
+    rel="stylesheet"
+    href="{% static 'css/blog_content.css' %}"
+>
+
+<style>
+    /* استایل‌های مخصوص صفحه جزئیات؛ استایل محتوای مقاله در فایل مشترک است */
+
+    .blog-detail-page {
+        direction: rtl;
+        text-align: right;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+    }
+
+    .blog-detail-page .breadcrumb {
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 0.5rem;
+        margin-bottom: 0;
+        font-size: 0.92rem;
+    }
+
+    .blog-detail-page .breadcrumb-item.active {
+        max-width: min(300px, 65vw);
+    }
+
+    .blog-article {
+        overflow: hidden;
+        border: 1px solid #e9efeb;
+        border-radius: 1.5rem;
+        background-color: #fff;
+        box-shadow:
+            0 0.75rem 2rem rgba(24, 61, 43, 0.06),
+            0 0.15rem 0.4rem rgba(24, 61, 43, 0.04);
+    }
+
+    .blog-cover {
+        display: block;
+        width: 100%;
+        max-height: 540px;
+        object-fit: cover;
+    }
+
+    .blog-article .card-body {
+        background: linear-gradient(
+            180deg,
+            #fff 0%,
+            #fff 92%,
+            #fbfdfb 100%
+        );
+    }
+
+    .blog-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .blog-category {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        background-color: #eaf7ef;
+        color: #146c43;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .blog-category:hover {
+        background-color: #d8efe0;
+        color: #0f5132;
+    }
+
+    .blog-title {
+        max-width: 900px;
+        margin-bottom: 1.5rem;
+        color: #172b21;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .blog-excerpt {
+        margin-bottom: 2rem;
+        padding: 1.15rem 1.25rem;
+        border: 1px solid #cce8d5;
+        border-right: 5px solid #198754;
+        border-radius: 0 1rem 1rem 0;
+        background-color: #f1faf4;
+        color: #365345;
+        line-height: 2;
+    }
+
+    .blog-content {
+        min-width: 0;
+    }
+
+    .blog-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #edf1ee;
+    }
+
+    .blog-tags-title {
+        margin-left: 0.25rem;
+        color: #53655a;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .blog-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.85rem;
+        border: 1px solid #cce8d5;
+        border-radius: 999px;
+        background-color: #f4fbf6;
+        color: #157347;
+        font-size: 0.85rem;
+    }
+
+    .blog-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .blog-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 44px;
+        padding: 0.65rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+        .blog-detail-page {
+            padding-top: 1rem;
+            padding-bottom: 2.5rem;
+        }
+
+        .blog-article {
+            border-radius: 1rem;
+        }
+
+        .blog-article .card-body {
+            padding: 1.25rem !important;
+        }
+
+        .blog-title {
+            font-size: 1.7rem;
+        }
+
+        .blog-cover {
+            max-height: 320px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .blog-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="container blog-detail-page">
+
+    <nav aria-label="مسیر صفحه" class="mb-4">
+        <ol class="breadcrumb">
+
+            <li class="breadcrumb-item">
+                <a
+                    href="{% url 'blogs:blog_home' %}"
+                    class="link-success text-decoration-none"
+                >
+                    بلاگ
+                </a>
+            </li>
+
+            <li class="breadcrumb-item">
+                <a
+                    href="{% url 'blogs:list' %}"
+                    class="link-success text-decoration-none"
+                >
+                    مقالات
+                </a>
+            </li>
+
+            <li
+                class="breadcrumb-item active text-truncate"
+                aria-current="page"
+                title="{{ blog_post.title }}"
+            >
+                {{ blog_post.title }}
+            </li>
+
+        </ol>
+    </nav>
+
+    <article class="card blog-article">
+
+        {% if blog_post.cover %}
+            <img
+                src="{{ blog_post.cover.url }}"
+                alt="{{ blog_post.title }}"
+                class="blog-cover"
+            >
+        {% endif %}
+
+        <div class="card-body p-4 p-lg-5">
+
+            <header>
+
+                <div class="blog-meta">
+
+                    {% if blog_post.category %}
+                        <a
+                            href="{% url 'blogs:list' %}"
+                            class="blog-category"
+                        >
+                            {{ blog_post.category.name }}
+                        </a>
+                    {% endif %}
+
+                    {% if blog_post.pub_date %}
+                        <time
+                            datetime="{{ blog_post.pub_date|date:'c' }}"
+                        >
+                            انتشار:
+                            {{ blog_post.pub_date|date:"Y/m/d" }}
+                        </time>
+                    {% endif %}
+
+                </div>
+
+                <h1 class="blog-title">
+                    {{ blog_post.title }}
+                </h1>
+
+                {% if blog_post.excerpt %}
+                    <div class="blog-excerpt">
+                        {{ blog_post.excerpt }}
+                    </div>
+                {% endif %}
+
+            </header>
+
+            <div class="blog-content">
+                {{ blog_post.content|safe }}
+            </div>
+
+            {% with tags=blog_post.tags.all %}
+                {% if tags %}
+                    <div class="blog-tags">
+
+                        <span class="blog-tags-title">
+                            برچسب‌ها:
+                        </span>
+
+                        {% for tag in tags %}
+                            <span class="blog-tag">
+                                #{{ tag.title }}
+                            </span>
+                        {% endfor %}
+
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+        </div>
+
+    </article>
+
+    <div class="blog-actions">
+
+        <a
+            href="{% url 'blogs:list' %}"
+            class="btn btn-outline-success"
+        >
+            <span aria-hidden="true">→</span>
+            بازگشت به همه مقالات
+        </a>
+
+        <a
+            href="{% url 'blogs:blog_home' %}"
+            class="btn btn-success"
+        >
+            صفحه اصلی بلاگ
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
