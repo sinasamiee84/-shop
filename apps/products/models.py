@@ -140,6 +140,12 @@ class Product(models.Model):
         default=Gender.FEMALE,
         verbose_name="جنسیت",
     )
+    blog_posts = models.ManyToManyField(
+        "blogs.BlogPost",
+        blank=True,
+        related_name="products",
+        verbose_name="مقالات آموزشی",
+    )
     is_active = models.BooleanField(default=True, verbose_name="فعال")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ ویرایش")

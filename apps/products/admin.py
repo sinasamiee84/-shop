@@ -48,13 +48,16 @@ class ProductAdmin(ModelAdmin):
     list_filter = ("brand", "category", "gender", "is_active")
     search_fields = ("title", "brand__name")
     prepopulated_fields = {"slug": ("title",)}
+    autocomplete_fields = [
+        "blog_posts",
+    ]
 
     # اضافه کردن تصاویر و واریانت‌ها به صفحه ویرایش محصول
     inlines = [ProductVariantInline, ProductImageInline]
 
     fieldsets = (
         ("اطلاعات اصلی", {
-            "fields": ("title", "slug", "category", "brand", "model", "price", "description")
+            "fields": ("title", "slug", "category", "brand", "model", "price", "description",'blog_posts')
         }),
         ("مشخصات پیش‌فرض (فعلی)", {
             "fields": ("color", "size", "gender", "quantity")

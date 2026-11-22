@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 {% load humanize l10n %}
 
-
 {% block title %}
     {{ product.title }}
 {% endblock %}
 
-
 {% block extra_head %}
 <style>
+    .shop-page {
+        direction: rtl;
+        padding: 2rem 0 4rem;
+    }
+
+    .shop-detail-media {
+        overflow: hidden;
+        border: 1px solid #e7eee9;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 0.5rem 1.5rem rgba(24, 61, 43, 0.06);
+    }
+
     .shop-detail-media .carousel {
         width: 100%;
     }
@@ -18,6 +29,7 @@
         width: 100%;
         height: 340px;
         object-fit: contain;
+        background: #fff;
     }
 
     .shop-detail-media .carousel-control-prev,
@@ -30,8 +42,28 @@
         filter: invert(1);
     }
 
+    .shop-detail-media .carousel-indicators {
+        margin-bottom: 0.75rem;
+    }
+
     .shop-detail-media .carousel-indicators button {
+        width: 24px;
+        height: 4px;
+        border: 0;
+        border-radius: 999px;
         background-color: #157454;
+    }
+
+    .shop-heading {
+        color: #172b21;
+        font-size: clamp(1.7rem, 3vw, 2.45rem);
+        font-weight: 900;
+        line-height: 1.7;
+    }
+
+    .shop-description {
+        color: #52635a;
+        line-height: 2;
     }
 
     .shop-detail-options {
@@ -47,7 +79,7 @@
 
     .shop-detail-options .form-select:focus {
         border-color: #157454;
-        box-shadow: 0 0 0 .2rem rgba(21, 116, 84, .15);
+        box-shadow: 0 0 0 0.2rem rgba(21, 116, 84, 0.15);
     }
 
     .shop-price {
@@ -57,17 +89,21 @@
     }
 
     .shop-btn {
+        min-height: 48px;
+        padding: 12px 25px;
         border: 0;
         border-radius: 12px;
         background-color: #157454;
-        color: white;
-        padding: 12px 25px;
+        color: #fff;
         font-weight: 700;
-        transition: .2s ease;
+        transition:
+            background-color 0.2s ease,
+            transform 0.2s ease;
     }
 
     .shop-btn:hover:not(:disabled) {
         background-color: #105c42;
+        color: #fff;
         transform: translateY(-1px);
     }
 
@@ -76,7 +112,154 @@
         cursor: not-allowed;
     }
 
+    /* مقالات آموزشی مرتبط */
+
+    .product-blog-section {
+        margin-top: 4rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid #e8efeb;
+    }
+
+    .product-blog-heading {
+        margin-bottom: 0.45rem;
+        color: #172b21;
+        font-size: 1.65rem;
+        font-weight: 800;
+    }
+
+    .product-blog-subtitle {
+        margin-bottom: 1.75rem;
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    .product-blog-card {
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid #e5eee8;
+        border-radius: 1rem;
+        background-color: #fff;
+        box-shadow: 0 0.45rem 1.3rem rgba(24, 61, 43, 0.06);
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    .product-blog-card:hover {
+        border-color: #b7dfc4;
+        transform: translateY(-5px);
+        box-shadow: 0 0.9rem 2rem rgba(24, 61, 43, 0.12);
+    }
+
+    .product-blog-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: 190px;
+        background: linear-gradient(135deg, #eaf7ef, #f7fbf8);
+    }
+
+    .product-blog-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+
+    .product-blog-card:hover .product-blog-image {
+        transform: scale(1.04);
+    }
+
+    .product-blog-no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #157454;
+        font-size: 2.3rem;
+        font-weight: 800;
+    }
+
+    .product-blog-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 215px;
+        padding: 1.25rem;
+    }
+
+    .product-blog-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        color: #6c757d;
+        font-size: 0.78rem;
+    }
+
+    .product-blog-category {
+        display: inline-flex;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background-color: #eaf7ef;
+        color: #157454;
+        font-weight: 700;
+    }
+
+    .product-blog-title {
+        display: -webkit-box;
+        overflow: hidden;
+        margin-bottom: 0.65rem;
+        color: #172b21;
+        font-size: 1.08rem;
+        font-weight: 800;
+        line-height: 1.8;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .product-blog-excerpt {
+        display: -webkit-box;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+        color: #66756d;
+        font-size: 0.9rem;
+        line-height: 1.9;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+    }
+
+    .product-blog-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        width: 100%;
+        min-height: 42px;
+        margin-top: auto;
+        padding: 0.6rem 1rem;
+        border: 1px solid #157454;
+        border-radius: 0.7rem;
+        background-color: #fff;
+        color: #157454;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition:
+            background-color 0.2s ease,
+            color 0.2s ease;
+    }
+
+    .product-blog-link:hover {
+        background-color: #157454;
+        color: #fff;
+    }
+
     @media (max-width: 576px) {
+        .shop-page {
+            padding-top: 1rem;
+        }
+
         .shop-detail-media .carousel-item img {
             height: 240px;
         }
@@ -84,215 +267,252 @@
         .shop-detail-options {
             grid-template-columns: 1fr;
         }
+
+        .product-blog-section {
+            margin-top: 3rem;
+        }
+
+        .product-blog-heading {
+            font-size: 1.35rem;
+        }
+
+        .product-blog-image-wrapper {
+            height: 180px;
+        }
     }
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="shop-page">
+<div class="container shop-page">
 
     {% with images=product.images.all variants=product.variants.all %}
 
-    <div class="shop-detail">
-        <div class="row g-4 align-items-start">
+        <div class="shop-detail">
+            <div class="row g-4 align-items-start">
 
-            <!-- تصاویر محصول -->
-            <div class="col-lg-5">
-                <div class="shop-detail-media">
+                <!-- تصاویر محصول -->
+                <div class="col-lg-5">
+                    <div class="shop-detail-media">
 
-                    {% if images %}
-                        <div id="product-gallery" class="carousel slide">
+                        {% if images %}
+                            <div id="product-gallery" class="carousel slide">
 
-                            {% if images|length > 1 %}
-                                <div class="carousel-indicators">
-
-                                    {% for image in images %}
-                                        <button
-                                            type="button"
-                                            data-bs-target="#product-gallery"
-                                            data-bs-slide-to="{{ forloop.counter0 }}"
-                                            class="{% if forloop.first %}active{% endif %}"
-                                            {% if forloop.first %}
-                                                aria-current="true"
-                                            {% endif %}
-                                            aria-label="تصویر {{ forloop.counter }}"
-                                        ></button>
-                                    {% endfor %}
-
-                                </div>
-                            {% endif %}
-
-
-                            <div class="carousel-inner">
-
-                                {% for image in images %}
-                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                        <img
-                                            src="{{ image.image.url }}"
-                                            alt="{{ product.title }} - تصویر {{ forloop.counter }}"
-                                            {% if not forloop.first %}
-                                                loading="lazy"
-                                            {% endif %}
-                                        >
+                                {% if images|length > 1 %}
+                                    <div class="carousel-indicators">
+                                        {% for image in images %}
+                                            <button
+                                                type="button"
+                                                data-bs-target="#product-gallery"
+                                                data-bs-slide-to="{{ forloop.counter0 }}"
+                                                class="{% if forloop.first %}active{% endif %}"
+                                                {% if forloop.first %}
+                                                    aria-current="true"
+                                                {% endif %}
+                                                aria-label="تصویر {{ forloop.counter }}"
+                                            ></button>
+                                        {% endfor %}
                                     </div>
-                                {% endfor %}
+                                {% endif %}
+
+                                <div class="carousel-inner">
+                                    {% for image in images %}
+                                        <div
+                                            class="carousel-item {% if forloop.first %}active{% endif %}"
+                                        >
+                                            <img
+                                                src="{{ image.image.url }}"
+                                                alt="{{ product.title }} - تصویر {{ forloop.counter }}"
+                                                {% if not forloop.first %}
+                                                    loading="lazy"
+                                                {% endif %}
+                                            >
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if images|length > 1 %}
+                                    <button
+                                        class="carousel-control-prev"
+                                        type="button"
+                                        data-bs-target="#product-gallery"
+                                        data-bs-slide="prev"
+                                        aria-label="تصویر قبلی"
+                                    >
+                                        <span
+                                            class="carousel-control-prev-icon"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                        <span class="visually-hidden">
+                                            قبلی
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        class="carousel-control-next"
+                                        type="button"
+                                        data-bs-target="#product-gallery"
+                                        data-bs-slide="next"
+                                        aria-label="تصویر بعدی"
+                                    >
+                                        <span
+                                            class="carousel-control-next-icon"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                        <span class="visually-hidden">
+                                            بعدی
+                                        </span>
+                                    </button>
+                                {% endif %}
 
                             </div>
+                        {% else %}
+                            <div class="text-muted text-center p-4">
+                                تصویری برای این محصول ثبت نشده است.
+                            </div>
+                        {% endif %}
 
+                    </div>
+                </div>
 
-                            {% if images|length > 1 %}
-                                <button
-                                    class="carousel-control-prev"
-                                    type="button"
-                                    data-bs-target="#product-gallery"
-                                    data-bs-slide="prev"
-                                    aria-label="تصویر قبلی"
-                                >
-                                    <span
-                                        class="carousel-control-prev-icon"
-                                        aria-hidden="true"
-                                    ></span>
+                <!-- اطلاعات محصول -->
+                <div class="col-lg-7">
 
-                                    <span class="visually-hidden">
-                                        قبلی
-                                    </span>
-                                </button>
+                    <h1 class="shop-heading mb-3">
+                        {{ product.title }}
+                    </h1>
 
-
-                                <button
-                                    class="carousel-control-next"
-                                    type="button"
-                                    data-bs-target="#product-gallery"
-                                    data-bs-slide="next"
-                                    aria-label="تصویر بعدی"
-                                >
-                                    <span
-                                        class="carousel-control-next-icon"
-                                        aria-hidden="true"
-                                    ></span>
-
-                                    <span class="visually-hidden">
-                                        بعدی
-                                    </span>
-                                </button>
-                            {% endif %}
-
-                        </div>
-                    {% else %}
-                        <div class="text-muted text-center p-4">
-                            تصویری برای این محصول ثبت نشده است.
+                    {% if product.description %}
+                        <div class="shop-description mb-4">
+                            {{ product.description|linebreaks }}
                         </div>
                     {% endif %}
 
-                </div>
-            </div>
-
-
-            <!-- اطلاعات محصول -->
-            <div class="col-lg-7">
-
-                <h1 class="shop-heading mb-3">
-                    {{ product.title }}
-                </h1>
-
-
-                {% if product.description %}
-                    <div class="shop-description mb-4">
-                        {{ product.description|linebreaks }}
-                    </div>
-                {% endif %}
-
-
-                <!-- فرم افزودن به سبد خرید -->
-                <form
-                    method="post"
-                    action="{% url 'cart:add_to_cart' product.id %}"
-                >
-                    {% csrf_token %}
-
-                    <!-- این مقدار توسط JavaScript تنظیم می‌شود -->
-                    <input
-                        type="hidden"
-                        name="variant_id"
-                        id="selected-variant-id"
-                        value=""
+                    <!-- فرم افزودن به سبد خرید -->
+                    <form
+                        method="post"
+                        action="{% url 'cart:add_to_cart' product.id %}"
                     >
+                        {% csrf_token %}
 
+                        <input
+                            type="hidden"
+                            name="variant_id"
+                            id="selected-variant-id"
+                            value=""
+                        >
 
-                    {% if variants %}
+                        {% if variants %}
 
-                        <!-- اطلاعات و انتخاب واریانت -->
-                        <div class="shop-detail-options mb-4">
+                            <div class="shop-detail-options mb-4">
+                                <div>
+                                    <label
+                                        for="variant-color"
+                                        class="form-label fw-semibold"
+                                    >
+                                        رنگ
+                                    </label>
 
-                            <div>
-                                <label
-                                    for="variant-color"
-                                    class="form-label fw-semibold"
-                                >
-                                    رنگ
-                                </label>
+                                    <select
+                                        id="variant-color"
+                                        class="form-select"
+                                    ></select>
+                                </div>
 
-                                <select
-                                    id="variant-color"
-                                    class="form-select"
-                                ></select>
+                                <div>
+                                    <label
+                                        for="variant-size"
+                                        class="form-label fw-semibold"
+                                    >
+                                        سایز
+                                    </label>
+
+                                    <select
+                                        id="variant-size"
+                                        class="form-select"
+                                    ></select>
+                                </div>
                             </div>
 
-
-                            <div>
-                                <label
-                                    for="variant-size"
-                                    class="form-label fw-semibold"
-                                >
-                                    سایز
-                                </label>
-
-                                <select
-                                    id="variant-size"
-                                    class="form-select"
-                                ></select>
+                            <div id="variant-data" hidden>
+                                {% for variant in variants %}
+                                    <span
+                                        data-variant-id="{{ variant.id }}"
+                                        data-color="{{ variant.color|default_if_none:'' }}"
+                                        data-size="{{ variant.size|default_if_none:'' }}"
+                                        data-price="{{ variant.price|unlocalize }}"
+                                        data-quantity="{{ variant.quantity|unlocalize }}"
+                                    ></span>
+                                {% endfor %}
                             </div>
 
-                        </div>
+                            {% with first_variant=variants.0 %}
+                                <div
+                                    id="price-display"
+                                    class="shop-price mb-2"
+                                >
+                                    {{ first_variant.price|intcomma }}
+                                    تومان
+                                </div>
 
+                                <p
+                                    id="stock-display"
+                                    class="mb-4"
+                                    aria-live="polite"
+                                >
+                                    {% if first_variant.quantity > 0 %}
+                                        <span class="text-success">
+                                            موجود
+                                            ({{ first_variant.quantity }} عدد)
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            ناموجود
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            {% endwith %}
 
-                        <!-- اطلاعات واریانت‌ها برای JavaScript -->
-                        <div id="variant-data" hidden>
+                        {% else %}
 
-                            {% for variant in variants %}
-                                <span
-                                    data-variant-id="{{ variant.id }}"
-                                    data-color="{{ variant.color|default_if_none:'' }}"
-                                    data-size="{{ variant.size|default_if_none:'' }}"
-                                    data-price="{{ variant.price|unlocalize }}"
-                                    data-quantity="{{ variant.quantity|unlocalize }}"
-                                ></span>
-                            {% endfor %}
+                            <!-- محصول بدون واریانت -->
+                            {% if product.color or product.size %}
+                                <div class="mb-3">
+                                    {% if product.color %}
+                                        <p class="mb-1">
+                                            <strong>رنگ:</strong>
+                                            {{ product.color }}
+                                        </p>
+                                    {% endif %}
 
-                        </div>
-
-
-                        {% with first_variant=variants.0 %}
+                                    {% if product.size %}
+                                        <p class="mb-1">
+                                            <strong>سایز:</strong>
+                                            {{ product.size }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
 
                             <div
                                 id="price-display"
                                 class="shop-price mb-2"
                             >
-                                {{ first_variant.price|intcomma }}
+                                {{ product.price|intcomma }}
                                 تومان
                             </div>
-
 
                             <p
                                 id="stock-display"
                                 class="mb-4"
                                 aria-live="polite"
                             >
-                                {% if first_variant.quantity > 0 %}
+                                {% if product.quantity > 0 %}
                                     <span class="text-success">
                                         موجود
-                                        ({{ first_variant.quantity }} عدد)
+                                        ({{ product.quantity }} عدد)
                                     </span>
                                 {% else %}
                                     <span class="text-danger">
@@ -301,99 +521,126 @@
                                 {% endif %}
                             </p>
 
-                        {% endwith %}
-
-                    {% else %}
-
-                        <!-- محصول ساده -->
-                        {% if product.color or product.size %}
-                            <div class="mb-3">
-
-                                {% if product.color %}
-                                    <p class="mb-1">
-                                        <strong>رنگ:</strong>
-                                        {{ product.color }}
-                                    </p>
-                                {% endif %}
-
-
-                                {% if product.size %}
-                                    <p class="mb-1">
-                                        <strong>سایز:</strong>
-                                        {{ product.size }}
-                                    </p>
-                                {% endif %}
-
-                            </div>
                         {% endif %}
 
-
-                        <div
-                            id="price-display"
-                            class="shop-price mb-2"
-                        >
-                            {{ product.price|intcomma }}
-                            تومان
-                        </div>
-
-
-                        <p
-                            id="stock-display"
-                            class="mb-4"
-                            aria-live="polite"
-                        >
-                            {% if product.quantity > 0 %}
-                                <span class="text-success">
-                                    موجود
-                                    ({{ product.quantity }} عدد)
-                                </span>
+                        <button
+                            id="add-to-cart-button"
+                            type="submit"
+                            class="shop-btn"
+                            {% if variants %}
+                                {% if variants.0.quantity <= 0 %}
+                                    disabled
+                                {% endif %}
                             {% else %}
-                                <span class="text-danger">
-                                    ناموجود
-                                </span>
+                                {% if product.quantity <= 0 %}
+                                    disabled
+                                {% endif %}
                             {% endif %}
-                        </p>
+                        >
+                            افزودن به سبد خرید
+                        </button>
+                    </form>
 
-                    {% endif %}
-
-
-                    <button
-                        id="add-to-cart-button"
-                        type="submit"
-                        class="shop-btn"
-                        {% if variants %}
-                            {% if variants.0.quantity <= 0 %}
-                                disabled
-                            {% endif %}
-                        {% else %}
-                            {% if product.quantity <= 0 %}
-                                disabled
-                            {% endif %}
-                        {% endif %}
-                    >
-                        افزودن به سبد خرید
-                    </button>
-
-                </form>
-
+                </div>
             </div>
-
         </div>
-    </div>
+
+        <!-- مقالات آموزشی مرتبط با محصول -->
+        {% with related_posts=product.blog_posts.all %}
+            {% if related_posts %}
+                <section
+                    class="product-blog-section"
+                    aria-labelledby="product-blog-heading"
+                >
+                    <div class="mb-4">
+                        <h2
+                            id="product-blog-heading"
+                            class="product-blog-heading"
+                        >
+                            مقالات آموزشی مرتبط
+                        </h2>
+
+                        <p class="product-blog-subtitle">
+                            برای آشنایی بهتر با این محصول، این مطالب آموزشی را مطالعه کنید.
+                        </p>
+                    </div>
+
+                    <div class="row g-4">
+                        {% for post in related_posts %}
+                            <div class="col-md-6 col-xl-4">
+                                <article class="product-blog-card">
+
+                                    <div class="product-blog-image-wrapper">
+                                        {% if post.cover %}
+                                            <img
+                                                src="{{ post.cover.url }}"
+                                                alt="{{ post.title }}"
+                                                class="product-blog-image"
+                                                loading="lazy"
+                                            >
+                                        {% else %}
+                                            <div
+                                                class="product-blog-no-image"
+                                                aria-hidden="true"
+                                            >
+                                                ?
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="product-blog-body">
+
+                                        <div class="product-blog-meta">
+                                            {% if post.category %}
+                                                <span class="product-blog-category">
+                                                    {{ post.category.name }}
+                                                </span>
+                                            {% endif %}
+
+                                            {% if post.pub_date %}
+                                                <time
+                                                    datetime="{{ post.pub_date|date:'c' }}"
+                                                >
+                                                    {{ post.pub_date|date:"Y/m/d" }}
+                                                </time>
+                                            {% endif %}
+                                        </div>
+
+                                        <h3 class="product-blog-title">
+                                            {{ post.title }}
+                                        </h3>
+
+                                        {% if post.excerpt %}
+                                            <p class="product-blog-excerpt">
+                                                {{ post.excerpt|truncatewords:22 }}
+                                            </p>
+                                        {% endif %}
+
+                                        <a
+                                            href="{% url 'blogs:detail' post.slug %}"
+                                            class="product-blog-link"
+                                        >
+                                            مطالعه مقاله
+                                            <span aria-hidden="true">←</span>
+                                        </a>
+
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+        {% endwith %}
 
     {% endwith %}
 
 </div>
 {% endblock %}
 
-
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
-    /*
-     * فعال‌سازی گالری تصاویر
-     */
     const gallery = document.getElementById("product-gallery");
 
     if (gallery && window.bootstrap) {
@@ -403,17 +650,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-
-    /*
-     * اگر محصول واریانت نداشته باشد،
-     * نیازی به اجرای کد انتخاب واریانت نیست.
-     */
     const variantData = document.getElementById("variant-data");
 
     if (!variantData) {
         return;
     }
-
 
     const addToCartButton = document.getElementById(
         "add-to-cart-button"
@@ -439,10 +680,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "stock-display"
     );
 
-
-    /*
-     * خواندن اطلاعات واریانت‌ها از HTML
-     */
     const variants = Array.from(
         variantData.querySelectorAll("[data-variant-id]")
     ).map(function (element) {
@@ -455,13 +692,6 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     });
 
-
-    /*
-     * خواندن variant_id از URL
-     *
-     * مثال:
-     * /products/5/?variant_id=12
-     */
     const urlParams = new URLSearchParams(
         window.location.search
     );
@@ -469,7 +699,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const variantIdFromUrl = urlParams.get(
         "variant_id"
     );
-
 
     function addOption(select, value, emptyLabel) {
         const label = value || emptyLabel;
@@ -479,7 +708,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     }
 
-
     function updateProductInfo() {
         const selectedVariant = variants.find(function (variant) {
             return (
@@ -488,72 +716,43 @@ document.addEventListener("DOMContentLoaded", function () {
             );
         });
 
-
         if (!selectedVariant) {
             priceDisplay.textContent = "قیمت نامشخص";
-
-            stockDisplay.textContent =
-                "این ترکیب موجود نیست.";
-
-            stockDisplay.className =
-                "mb-4 text-danger";
-
+            stockDisplay.textContent = "این ترکیب موجود نیست.";
+            stockDisplay.className = "mb-4 text-danger";
             selectedVariantInput.value = "";
-
             addToCartButton.disabled = true;
-
             return;
         }
 
-
-        /*
-         * تنظیم واریانت انتخاب‌شده در input مخفی فرم
-         */
-        selectedVariantInput.value =
-            selectedVariant.id;
-
+        selectedVariantInput.value = selectedVariant.id;
 
         priceDisplay.textContent =
-            new Intl.NumberFormat("en-US", {
-                maximumFractionDigits: 2
-            }).format(selectedVariant.price)
-            + " تومان";
-
+            new Intl.NumberFormat("en-US").format(
+                selectedVariant.price
+            ) + " تومان";
 
         if (selectedVariant.quantity > 0) {
             stockDisplay.textContent =
-                "موجود ("
-                + selectedVariant.quantity
-                + " عدد)";
+                "موجود (" +
+                selectedVariant.quantity +
+                " عدد)";
 
-            stockDisplay.className =
-                "mb-4 text-success";
-
+            stockDisplay.className = "mb-4 text-success";
             addToCartButton.disabled = false;
-
         } else {
-            stockDisplay.textContent =
-                "ناموجود";
-
-            stockDisplay.className =
-                "mb-4 text-danger";
-
+            stockDisplay.textContent = "ناموجود";
+            stockDisplay.className = "mb-4 text-danger";
             addToCartButton.disabled = true;
         }
     }
 
-
     function updateSizes(preferredSize) {
-        /*
-         * فقط سایزهای مربوط به رنگ انتخاب‌شده را نمایش می‌دهیم.
-         */
         const availableVariants = variants.filter(function (variant) {
             return variant.color === colorSelect.value;
         });
 
-
         sizeSelect.innerHTML = "";
-
 
         const sizes = [
             ...new Set(
@@ -563,7 +762,6 @@ document.addEventListener("DOMContentLoaded", function () {
             )
         ];
 
-
         sizes.forEach(function (size) {
             addOption(
                 sizeSelect,
@@ -572,43 +770,23 @@ document.addEventListener("DOMContentLoaded", function () {
             );
         });
 
-
-        /*
-         * اگر سایز قبلی وجود داشته باشد، همان را انتخاب می‌کنیم.
-         */
-        const preferredExists = sizes.includes(
-            preferredSize
-        );
-
-
-        if (preferredExists) {
+        if (sizes.includes(preferredSize)) {
             sizeSelect.value = preferredSize;
-
         } else {
-            /*
-             * در غیر این صورت، اولین واریانت موجود
-             * یا اولین سایز را انتخاب می‌کنیم.
-             */
             const firstInStock = availableVariants.find(
                 function (variant) {
                     return variant.quantity > 0;
                 }
             );
 
-
             sizeSelect.value = firstInStock
                 ? firstInStock.size
                 : (sizes[0] || "");
         }
 
-
         updateProductInfo();
     }
 
-
-    /*
-     * ساخت لیست رنگ‌ها
-     */
     const colors = [
         ...new Set(
             variants.map(function (variant) {
@@ -616,7 +794,6 @@ document.addEventListener("DOMContentLoaded", function () {
             })
         )
     ];
-
 
     colors.forEach(function (color) {
         addOption(
@@ -626,21 +803,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     });
 
-
-    /*
-     * انتخاب اولیه:
-     *
-     * اولویت اول:
-     * واریانتی که از URL آمده است.
-     *
-     * اولویت دوم:
-     * اولین واریانت موجود.
-     *
-     * اولویت سوم:
-     * اولین واریانت، حتی اگر ناموجود باشد.
-     */
     let initialVariant = null;
-
 
     if (variantIdFromUrl) {
         initialVariant = variants.find(function (variant) {
@@ -650,33 +813,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-
     if (!initialVariant) {
         initialVariant = variants.find(function (variant) {
             return variant.quantity > 0;
         }) || variants[0];
     }
 
-
-    /*
-     * تنظیم رنگ و سایز واریانت اولیه
-     */
     if (initialVariant) {
         colorSelect.value = initialVariant.color;
-
         updateSizes(initialVariant.size);
-
-        /*
-         * اطمینان از اینکه همان شناسه در فرم ارسال شود
-         */
-        selectedVariantInput.value =
-            initialVariant.id;
+        selectedVariantInput.value = initialVariant.id;
     }
 
-
-    /*
-     * تغییر رنگ
-     */
     colorSelect.addEventListener(
         "change",
         function () {
@@ -684,17 +832,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     );
 
-
-    /*
-     * تغییر سایز
-     */
     sizeSelect.addEventListener(
         "change",
         function () {
             updateProductInfo();
         }
     );
-
 });
 </script>
 {% endblock %}
